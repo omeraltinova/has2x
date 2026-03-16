@@ -57,8 +57,7 @@ function AnimatedHeader() {
             {SERVICES[activeIndex].name}
           </span>
         </span>
-        <span className="text-emerald-500">2x</span>
-        <span className="text-zinc-600 text-2xl font-normal">?</span>
+        <span className="text-emerald-500">2x<span className="text-zinc-400">?</span></span>
       </h1>
     </div>
   );
