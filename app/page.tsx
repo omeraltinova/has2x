@@ -195,6 +195,7 @@ function StatusCard({ status }: { status: ServiceStatus }) {
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [statuses, setStatuses] = useState<{
     claude: ServiceStatus;
     gpt: ServiceStatus;
@@ -220,17 +221,36 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    setMousePosition({ x: e.clientX, y: e.clientY });
+  };
+
   if (!mounted || !statuses) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+      <div className="flex min-h-screen items-center justify-center dark-grid-bg">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-emerald-500" />
+        <div
+          className="pointer-events-none fixed inset-0 z-0"
+          style={{
+            background: `radial-gradient(600px circle at 50% 50%, rgba(16, 185, 129, 0.06), transparent 40%)`,
+          }}
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
+    <div 
+      className="min-h-screen bg-zinc-50 dark-grid-bg px-4 py-8 sm:px-6 lg:px-8 relative overflow-hidden"
+      onMouseMove={handleMouseMove}
+    >
+      <div
+        className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
+        style={{
+          background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(16, 185, 129, 0.06), transparent 40%)`,
+        }}
+      />
+      <div className="mx-auto max-w-6xl relative z-10">
         <header className="mb-10 text-center">
           <AnimatedHeader />
           <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400">
@@ -251,6 +271,17 @@ export default function Home() {
         <footer className="mt-12 text-center text-xs text-zinc-400 dark:text-zinc-600">
           <p>
             Information may be inaccurate or outdated. For the most accurate data, please visit the official service websites.
+          </p>
+          <p className="mt-2">
+            Built by{" "}
+            <a
+              href="https://www.omeraltinova.com.tr/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-500 hover:text-emerald-400 transition-colors"
+            >
+              Faruk
+            </a>
           </p>
         </footer>
       </div>
