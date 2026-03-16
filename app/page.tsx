@@ -121,9 +121,24 @@ function StatusCard({ status }: { status: ServiceStatus }) {
       className={`relative flex flex-col rounded-2xl border-2 ${bgColor} p-6 shadow-lg ${glowColor} transition-all duration-300 hover:scale-[1.02]`}
     >
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-          {status.name}
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+            {status.name}
+          </h2>
+          {status.details && (
+            <div className="group relative">
+              <button
+                className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-300 text-xs font-bold text-zinc-600 hover:bg-zinc-400 dark:bg-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-600"
+              >
+                i
+              </button>
+              <div className="absolute left-1/2 top-full z-10 mt-2 w-64 -translate-x-1/2 rounded-lg bg-zinc-800 px-3 py-2 text-xs text-zinc-200 opacity-0 shadow-xl transition-opacity group-hover:opacity-100 dark:bg-zinc-700">
+                {status.details}
+                <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-zinc-800 dark:bg-zinc-700"></div>
+              </div>
+            </div>
+          )}
+        </div>
         <span
           className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeColor}`}
         >

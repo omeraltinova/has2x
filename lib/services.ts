@@ -10,6 +10,7 @@ export type ServiceStatus = {
   promotionExpired: boolean;
   peakHoursLocal: string;
   description: string;
+  details?: string;
 };
 
 // Claude: Peak 8AM-2PM ET weekdays, off-peak = 2x
@@ -31,6 +32,7 @@ export function getClaudeStatus(now: Date): ServiceStatus {
       promotionExpired: true,
       peakHoursLocal: "",
       description: "2x promotion ended on March 27.",
+      details: "Anthropic's Claude AI assistant. The 2× promotion has ended. Normal usage rates now apply.",
     };
   }
 
@@ -95,6 +97,7 @@ export function getClaudeStatus(now: Date): ServiceStatus {
     promotionExpired: false,
     peakHoursLocal: `${peakStartLocal} – ${peakEndLocal} (weekdays)`,
     description: "2× usage during off-peak hours. Valid until March 27.",
+    details: "Anthropic's Claude AI assistant. Peak hours: 8AM-2PM ET weekdays. During peak, normal usage rates apply. Off-peak gets 2× message allowance.",
   };
 }
 
@@ -116,11 +119,12 @@ export function getGPTStatus(now: Date): ServiceStatus {
       promotionExpired: true,
       peakHoursLocal: "",
       description: "2x promotion ended on April 2.",
+      details: "OpenAI's ChatGPT/Codex. The 2× promotion has ended. Normal usage rates now apply.",
     };
   }
 
   return {
-    name: "ChatGPT",
+    name: "Codex",
     multiplier: "2×",
     isBonus: true,
     statusLabel: "2× Limit Active!",
@@ -131,6 +135,7 @@ export function getGPTStatus(now: Date): ServiceStatus {
     promotionExpired: false,
     peakHoursLocal: `None — 24/7 active until Apr 2`,
     description: `2× usage around the clock. Valid until April 2, 2026.`,
+    details: "OpenAI's ChatGPT/Codex. Currently offering 2× message allowance 24/7. No peak hours during this promotion.",
   };
 }
 
@@ -186,6 +191,7 @@ export function getGLMStatus(now: Date): {
     promotionExpired: false,
     peakHoursLocal,
     description: "Peak: 3× consumption, Off-peak: 2×. Use GLM-5 for complex tasks, GLM-4.7 for routine.",
+    details: "Zhipu AI's GLM-5 model. Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak counts as 2×.",
   };
 
   const turboMultiplier = isPeak ? "3×" : turboOffPeakExpired ? "2×" : "1×";
@@ -209,6 +215,9 @@ export function getGLMStatus(now: Date): {
     description: turboOffPeakExpired
       ? "Peak: 3× consumption, Off-peak: 2×."
       : "Peak: 3× consumption, Off-peak: 1× (through end of April).",
+    details: turboOffPeakExpired
+      ? "Zhipu AI's GLM-5-Turbo. Peak: 3× consumption, Off-peak: 2×."
+      : "Zhipu AI's GLM-5-Turbo. Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak: 1× until end of April, then 2×.",
   };
 
   return { glm5, glm5Turbo };
