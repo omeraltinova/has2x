@@ -251,3 +251,43 @@ export function formatCountdown(ms: number): string {
   }
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
+
+export type PeakRange = {
+  startHour: number;
+  endHour: number;
+};
+
+export function getPeakRangesLocal(
+  sourceStartHour: number,
+  sourceEndHour: number,
+  sourceUtcOffset: number,
+  now: Date
+): PeakRange[] {
+  const localOffset = -now.getTimezoneOffset() / 60;
+  const diffOffset = localOffset - sourceUtcOffset;
+
+  let localStart = sourceStartHour + diffOffset;
+  let localEnd = sourceEndHour + diffOffset;
+
+  const ranges: PeakRange[] = [];
+
+  if (localStart < 0) localStart += 24;
+  if (localStart >= 24) localStart -= 24;
+  if (localEnd < 0) localEnd += 24;
+  if (localEnd >= 24) localEnd -= 24;
+
+  if (localStart < localEnd) {
+    ranges.push({ startHour: localStart, endHour: localEnd });
+  } else if (localStart > localEnd) {
+    ranges.push({ startHour: localStart, endHour: 24 });
+    if (localEnd > 0) {
+      ranges.push({ startHour: 0, endHour: localEnd });
+    }
+  }
+
+  return ranges;
+}
+
+export function getCurrentLocalHour(now: Date): number {
+  return now.getHours();
+}

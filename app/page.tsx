@@ -6,7 +6,10 @@ import {
   getGPTStatus,
   getGLMStatus,
   formatCountdown,
+  getPeakRangesLocal,
+  getCurrentLocalHour,
   type ServiceStatus,
+  type PeakRange,
 } from "@/lib/services";
 
 const SERVICES = [
@@ -57,6 +60,142 @@ function AnimatedHeader() {
         <span className="text-emerald-500">2x</span>
         <span className="text-zinc-600 text-2xl font-normal">?</span>
       </h1>
+    </div>
+  );
+}
+
+function Timeline({
+  peakRanges,
+  currentHour,
+  serviceColor,
+  label,
+}: {
+  peakRanges: PeakRange[];
+  currentHour: number;
+  serviceColor: string;
+  label: string;
+}) {
+  const [hoveredHour, setHoveredHour] = useState<number | null>(null);
+  const [tooltipX, setTooltipX] = useState(0);
+
+  const gradientStops: string[] = [];
+  
+  for (let hour = 0; hour < 24; hour++) {
+    const isInPeak = peakRanges.some(
+      (r) => hour >= r.startHour && hour < r.endHour
+    );
+    const pct = (hour / 24) * 100;
+    const nextPct = ((hour + 1) / 24) * 100;
+    
+    if (isInPeak) {
+      const color = serviceColor === "red" ? "239, 68, 68" : "245, 158, 11";
+      gradientStops.push(`rgba(${color}, 0.5) ${pct}%`);
+      gradientStops.push(`rgba(${color}, 0.5) ${nextPct}%`);
+    } else {
+      gradientStops.push(`rgba(16, 185, 129, 0.4) ${pct}%`);
+      gradientStops.push(`rgba(16, 185, 129, 0.4) ${nextPct}%`);
+    }
+  }
+
+  const currentPct = ((currentHour + 0.5) / 24) * 100;
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const pct = x / rect.width;
+    const hour = Math.floor(pct * 24);
+    setHoveredHour(Math.max(0, Math.min(23, hour)));
+    setTooltipX(x);
+  };
+
+  const isHoveredPeak = hoveredHour !== null && peakRanges.some(
+    (r) => hoveredHour >= r.startHour && hoveredHour < r.endHour
+  );
+
+  return (
+    <div className="mb-3">
+      <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-2">{label}</p>
+      <div className="relative pt-7">
+        {hoveredHour !== null && (
+          <div
+            className="absolute top-0 -translate-x-1/2 px-1.5 py-0.5 rounded bg-zinc-700 text-[10px] text-zinc-200 whitespace-nowrap z-20 pointer-events-none"
+            style={{ left: tooltipX }}
+          >
+            {hoveredHour.toString().padStart(2, "0")}:00
+            <span className={`ml-1 ${isHoveredPeak ? "text-red-400" : "text-emerald-400"}`}>
+              {isHoveredPeak ? "(Peak)" : "(Off-peak)"}
+            </span>
+          </div>
+        )}
+        <div 
+          className="relative h-2 rounded-full overflow-hidden bg-zinc-800/80 shadow-inner cursor-crosshair"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHoveredHour(null)}
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(90deg, ${gradientStops.join(", ")})`,
+            }}
+          />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-lg shadow-white/50 z-10"
+            style={{ left: `calc(${currentPct}% - 3px)` }}
+          />
+        </div>
+      </div>
+      <div className="flex justify-between text-[9px] text-zinc-500 mt-1.5 px-0.5">
+        <span>0</span>
+        <span>6</span>
+        <span>12</span>
+        <span>18</span>
+        <span>24</span>
+      </div>
+    </div>
+  );
+}
+
+function CodexTimeline({ currentHour }: { currentHour: number }) {
+  const [hoveredHour, setHoveredHour] = useState<number | null>(null);
+  const [tooltipX, setTooltipX] = useState(0);
+
+  const currentPct = ((currentHour + 0.5) / 24) * 100;
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const pct = x / rect.width;
+    const hour = Math.floor(pct * 24);
+    setHoveredHour(Math.max(0, Math.min(23, hour)));
+    setTooltipX(x);
+  };
+
+  return (
+    <div className="mb-3">
+      <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-2">Codex Peak Hours</p>
+      <div className="relative pt-7">
+        {hoveredHour !== null && (
+          <div
+            className="absolute top-0 -translate-x-1/2 px-1.5 py-0.5 rounded bg-zinc-700 text-[10px] text-zinc-200 whitespace-nowrap z-20 pointer-events-none"
+            style={{ left: tooltipX }}
+          >
+            {hoveredHour.toString().padStart(2, "0")}:00
+            <span className="ml-1 text-emerald-400">(2×)</span>
+          </div>
+        )}
+        <div 
+          className="relative h-2 rounded-full overflow-hidden bg-zinc-800/80 shadow-inner cursor-crosshair"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHoveredHour(null)}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/50 via-emerald-400/40 to-emerald-500/50" />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-lg shadow-white/50 z-10"
+            style={{ left: `calc(${currentPct}% - 3px)` }}
+          />
+        </div>
+      </div>
+      <p className="text-[9px] text-zinc-500 mt-1.5">24/7 active — no peak hours</p>
     </div>
   );
 }
@@ -266,6 +405,28 @@ export default function Home() {
           <StatusCard status={statuses.gpt} />
           <StatusCard status={statuses.glm5} />
           <StatusCard status={statuses.glm5Turbo} />
+        </div>
+
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Timeline
+            peakRanges={getPeakRangesLocal(8, 14, -4, new Date())}
+            currentHour={getCurrentLocalHour(new Date())}
+            serviceColor="red"
+            label="Claude Peak Hours"
+          />
+          <CodexTimeline currentHour={getCurrentLocalHour(new Date())} />
+          <Timeline
+            peakRanges={getPeakRangesLocal(14, 18, 8, new Date())}
+            currentHour={getCurrentLocalHour(new Date())}
+            serviceColor="red"
+            label="GLM-5 Peak Hours"
+          />
+          <Timeline
+            peakRanges={getPeakRangesLocal(14, 18, 8, new Date())}
+            currentHour={getCurrentLocalHour(new Date())}
+            serviceColor="red"
+            label="GLM-5-Turbo Peak Hours"
+          />
         </div>
 
         <footer className="mt-12 text-center text-xs text-zinc-400 dark:text-zinc-600">
