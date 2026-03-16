@@ -105,7 +105,7 @@ export function getGPTStatus(now: Date): ServiceStatus {
 
   if (promotionExpired) {
     return {
-      name: "ChatGPT",
+      name: "Codex",
       multiplier: "1×",
       isBonus: false,
       statusLabel: "Promotion Ended",

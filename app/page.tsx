@@ -11,7 +11,7 @@ import {
 
 const SERVICES = [
   { name: "Claude", color: "text-orange-400" },
-  { name: "ChatGPT", color: "text-green-400" },
+  { name: "Codex", color: "text-green-400" },
   { name: "GLM", color: "text-cyan-400" },
 ];
 
@@ -235,8 +235,7 @@ export default function Home() {
 
         <footer className="mt-12 text-center text-xs text-zinc-400 dark:text-zinc-600">
           <p>
-            Data sourced from official announcements. Hours are automatically
-            converted to your local timezone.
+            Information may be inaccurate or outdated. For the most accurate data, please visit the official service websites.
           </p>
         </footer>
       </div>
