@@ -284,6 +284,73 @@ function BestTimeCard({ recommendation }: { recommendation: ReturnType<typeof ge
   );
 }
 
+function WidgetCard({ status }: { status: ServiceStatus }) {
+  const [countdown, setCountdown] = useState("");
+  
+  useEffect(() => {
+    if (!status.nextChangeAt) return;
+    const tick = () => {
+      const diff = status.nextChangeAt!.getTime() - Date.now();
+      if (diff <= 0) {
+        setCountdown("00:00");
+        return;
+      }
+      const hours = Math.floor(diff / 3600000);
+      const minutes = Math.floor((diff % 3600000) / 60000);
+      setCountdown(`${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`);
+    };
+    tick();
+    const interval = setInterval(tick, 60000);
+    return () => clearInterval(interval);
+  }, [status.nextChangeAt]);
+
+  const bgColor = {
+    green: "bg-emerald-500/10 border-emerald-500/30",
+    red: "bg-red-500/10 border-red-500/30",
+    orange: "bg-amber-500/10 border-amber-500/30",
+    gray: "bg-zinc-500/10 border-zinc-500/30",
+  }[status.statusColor];
+
+  const textColor = {
+    green: "text-emerald-600 dark:text-emerald-400",
+    red: "text-red-600 dark:text-red-400",
+    orange: "text-amber-600 dark:text-amber-400",
+    gray: "text-zinc-500",
+  }[status.statusColor];
+
+  const isBonusService = status.name === "Claude" || status.name === "Codex";
+  const limitText = isBonusService ? `${status.multiplier} bonus limits` : `${status.multiplier} usage count`;
+
+  return (
+    <div className={`rounded-lg border ${bgColor} p-3 flex items-center justify-between gap-3 min-w-[200px]`}>
+      <div className="flex flex-col">
+        <div className="flex items-center gap-1">
+          <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{status.name}</h3>
+          {status.details && (
+            <div className="group relative">
+              <button className="w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 text-[10px] font-bold text-zinc-600 dark:text-zinc-400 flex items-center justify-center hover:bg-zinc-300 dark:hover:bg-zinc-600">
+                i
+              </button>
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-48 px-2 py-1 bg-zinc-800 text-zinc-200 text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                {status.details}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-800"></div>
+              </div>
+            </div>
+          )}
+        </div>
+        <span className={`text-lg font-bold ${textColor}`}>{status.multiplier}</span>
+        <span className="text-[9px] text-zinc-500 dark:text-zinc-400 mt-0.5">{limitText}</span>
+      </div>
+      {countdown && (
+        <div className="text-right">
+          <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block">Changes in</span>
+          <span className="text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300">{countdown}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function StatusCard({ status }: { status: ServiceStatus }) {
   const nextChangeRef = useRef<Date | null>(null);
   const [countdown, setCountdown] = useState("");
@@ -432,8 +499,12 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
   const [timezone, setTimezone] = useState("");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [visibleServices, setVisibleServices] = useState<ServiceKey[]>(initialServices);
+  const [showBestTime, setShowBestTime] = useState(true);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [showWidgetModal, setShowWidgetModal] = useState(false);
+  const [widgetPreviewServices, setWidgetPreviewServices] = useState<ServiceKey[]>(initialServices);
+  const [widgetWidth, setWidgetWidth] = useState("100%");
+  const [widgetHeight, setWidgetHeight] = useState("400");
   const filterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -446,6 +517,20 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
       document.documentElement.classList.toggle("dark", saved === "dark");
     } else {
       document.documentElement.classList.add("dark");
+    }
+
+    const savedVisibleServices = localStorage.getItem("visibleServices");
+    if (savedVisibleServices) {
+      const parsed = JSON.parse(savedVisibleServices) as ServiceKey[];
+      const validServices = parsed.filter((s): s is ServiceKey => ALL_SERVICES.includes(s));
+      if (validServices.length > 0) {
+        setVisibleServices(validServices);
+      }
+    }
+
+    const savedShowBestTime = localStorage.getItem("showBestTime");
+    if (savedShowBestTime) {
+      setShowBestTime(JSON.parse(savedShowBestTime));
     }
 
     const update = () => {
@@ -471,6 +556,17 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (showWidgetModal) {
+      setWidgetPreviewServices(visibleServices);
+    }
+  }, [showWidgetModal, visibleServices]);
+
+  useEffect(() => {
+    localStorage.setItem("visibleServices", JSON.stringify(visibleServices));
+    localStorage.setItem("showBestTime", JSON.stringify(showBestTime));
+  }, [visibleServices, showBestTime]);
 
   const toggleService = (service: ServiceKey) => {
     setVisibleServices((prev) => {
@@ -508,18 +604,12 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
 
   if (isWidget) {
     return (
-      <div className={`min-h-screen p-4 ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}>
-        <div className="flex justify-center gap-4 flex-wrap">
-          {visibleServices.includes("claude") && <StatusCard status={statuses.claude} />}
-          {visibleServices.includes("codex") && <StatusCard status={statuses.gpt} />}
-          {visibleServices.includes("glm5") && <StatusCard status={statuses.glm5} />}
-          {visibleServices.includes("glm5Turbo") && <StatusCard status={statuses.glm5Turbo} />}
-        </div>
-        <div className="mt-4 flex justify-center gap-4 flex-wrap">
-          {visibleServices.includes("claude") && <Timeline peakRanges={getPeakRangesLocal(8, 14, -4, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="Claude Peak Hours" />}
-          {visibleServices.includes("codex") && <CodexTimeline currentHour={getCurrentLocalHour(new Date())} />}
-          {visibleServices.includes("glm5") && <Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5 Peak Hours" />}
-          {visibleServices.includes("glm5Turbo") && <Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5-Turbo Peak Hours" />}
+      <div className={`min-h-screen p-2 ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}>
+        <div className="flex flex-wrap justify-center gap-2">
+          {visibleServices.includes("claude") && <WidgetCard status={statuses.claude} />}
+          {visibleServices.includes("codex") && <WidgetCard status={statuses.gpt} />}
+          {visibleServices.includes("glm5") && <WidgetCard status={statuses.glm5} />}
+          {visibleServices.includes("glm5Turbo") && <WidgetCard status={statuses.glm5Turbo} />}
         </div>
       </div>
     );
@@ -562,7 +652,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
           </p>
         </header>
 
-        {recommendation && (
+        {recommendation && showBestTime && (
           <div className="mb-8">
             <BestTimeCard recommendation={recommendation} />
           </div>
@@ -590,15 +680,28 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
             <div className="relative" ref={filterRef}>
               <button
                 onClick={() => setShowFilterMenu(!showFilterMenu)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors text-zinc-700 dark:text-zinc-300"
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors ${
+                  visibleServices.length < 4 || !showBestTime
+                    ? 'bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                    : 'bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                 </svg>
-                Filter
+                {visibleServices.length < 4 || !showBestTime ? 'Filtered' : 'Filter'}
               </button>
               {showFilterMenu && (
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-700 p-2 min-w-[140px] z-50">
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-700 p-2 min-w-[180px] z-50">
+                  <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer border-b border-zinc-200 dark:border-zinc-700 mb-1">
+                    <input
+                      type="checkbox"
+                      checked={showBestTime}
+                      onChange={() => setShowBestTime(!showBestTime)}
+                      className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Best Time to Use</span>
+                  </label>
                   {[
                     { key: "claude" as const, label: "Claude" },
                     { key: "codex" as const, label: "Codex" },
@@ -645,25 +748,113 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
 
         {showWidgetModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowWidgetModal(false)}>
-            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl max-w-lg w-full p-6" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Embed Widget</h3>
-                <button onClick={() => setShowWidgetModal(false)} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col md:flex-row" onClick={(e) => e.stopPropagation()}>
+              {/* Left Side - Controls */}
+              <div className="w-full md:w-1/2 p-6 border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-700 overflow-y-auto">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Embed Widget</h3>
+                  <button onClick={() => setShowWidgetModal(false)} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                  Customize which services to show in the widget preview.
+                </p>
+
+                {/* Service Toggles */}
+                <div className="mb-6">
+                  <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Select Services:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { key: "claude" as const, label: "Claude" },
+                      { key: "codex" as const, label: "Codex" },
+                      { key: "glm5" as const, label: "GLM-5" },
+                      { key: "glm5Turbo" as const, label: "GLM-5-Turbo" },
+                    ].map((service) => (
+                      <label
+                        key={service.key}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={widgetPreviewServices.includes(service.key)}
+                          onChange={() => {
+                            setWidgetPreviewServices((prev) =>
+                              prev.includes(service.key)
+                                ? prev.filter((s) => s !== service.key)
+                                : [...prev, service.key]
+                            );
+                          }}
+                          className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-sm text-zinc-700 dark:text-zinc-300">{service.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Size Controls */}
+                <div className="mb-4 grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Width:</label>
+                    <input
+                      type="text"
+                      value={widgetWidth}
+                      onChange={(e) => setWidgetWidth(e.target.value)}
+                      placeholder="100% or 800px"
+                      className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Height:</label>
+                    <input
+                      type="text"
+                      value={widgetHeight}
+                      onChange={(e) => setWidgetHeight(e.target.value)}
+                      placeholder="400px or 100%"
+                      className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Iframe Code */}
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Embed Code:</p>
+                  <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-3 font-mono text-xs break-all text-zinc-700 dark:text-zinc-300">
+                    {`<iframe src="${typeof window !== "undefined" ? window.location.origin : ""}/?widget=true&services=${widgetPreviewServices.join(",")}" width="${widgetWidth}" height="${widgetHeight.includes('%') ? widgetHeight : `${widgetHeight}px`}" frameborder="0"></iframe>`}
+                  </div>
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
+                  <span className="text-xs text-zinc-500">Parameters:</span>
+                  <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-600 dark:text-zinc-400">?widget=true</code>
+                  <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-600 dark:text-zinc-400">?services=codex,glm5</code>
+                </div>
               </div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                Add this iframe to your website to embed the tracker. Use URL parameters to customize which services to show.
-              </p>
-              <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-3 font-mono text-xs break-all text-zinc-700 dark:text-zinc-300">
-                {`<iframe src="${typeof window !== "undefined" ? window.location.origin : ""}/?widget=true&services=${visibleServices.join(",")}" width="100%" height="600" frameborder="0"></iframe>`}
-              </div>
-              <div className="mt-4 flex gap-2 flex-wrap">
-                <span className="text-xs text-zinc-500">Parameters:</span>
-                <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-600 dark:text-zinc-400">?widget=true</code>
-                <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-600 dark:text-zinc-400">?services=codex,glm5</code>
+
+              {/* Right Side - Preview */}
+              <div className="w-full md:w-1/2 bg-zinc-50 dark:bg-zinc-950 p-6">
+                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
+                  Live Preview ({widgetWidth} × {widgetHeight}):
+                </p>
+                <div className="rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 mx-auto" style={{ width: widgetWidth.includes('px') ? widgetWidth : '100%', height: widgetHeight.includes('%') || widgetHeight === 'auto' ? widgetHeight : `${widgetHeight}px`, maxWidth: '100%' }}>
+                  {typeof window !== "undefined" && (
+                    <iframe
+                      src={`${window.location.origin}/?widget=true&services=${widgetPreviewServices.join(",")}`}
+                      width="100%"
+                      height="100%"
+                      frameBorder="0"
+                      title="Widget Preview"
+                      className="bg-white dark:bg-zinc-900"
+                    />
+                  )}
+                </div>
+                <p className="text-xs text-zinc-500 mt-2 text-center">
+                  {widgetPreviewServices.length} service{widgetPreviewServices.length !== 1 ? 's' : ''} selected
+                </p>
               </div>
             </div>
           </div>
