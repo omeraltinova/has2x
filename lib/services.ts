@@ -291,3 +291,87 @@ export function getPeakRangesLocal(
 export function getCurrentLocalHour(now: Date): number {
   return now.getHours();
 }
+
+export type BestTimeService = {
+  name: string;
+  multiplier: string;
+  isBonus: boolean;
+  isBest: boolean;
+};
+
+export type BestTimeRecommendation = {
+  nowBestServices: BestTimeService[];
+  upcomingBestWindow: {
+    time: string;
+    services: string[];
+    countdown: string;
+  } | null;
+  summary: string;
+  isAllOptimal: boolean;
+};
+
+export function getBestTimeRecommendation(
+  claude: ServiceStatus,
+  gpt: ServiceStatus,
+  glm5: ServiceStatus,
+  glm5Turbo: ServiceStatus
+): BestTimeRecommendation {
+  const services: BestTimeService[] = [
+    { name: claude.name, multiplier: claude.multiplier, isBonus: claude.isBonus, isBest: claude.isBonus },
+    { name: gpt.name, multiplier: gpt.multiplier, isBonus: gpt.isBonus, isBest: gpt.isBonus },
+    { name: glm5.name, multiplier: glm5.multiplier, isBonus: glm5.isBonus, isBest: glm5.isBonus },
+    { name: glm5Turbo.name, multiplier: glm5Turbo.multiplier, isBonus: glm5Turbo.isBonus, isBest: glm5Turbo.isBonus },
+  ];
+
+  const nowBestServices = services.filter((s) => s.isBest);
+  const isAllOptimal = services.every((s) => s.isBest);
+  const hasAnyBonus = services.some((s) => s.isBonus);
+
+  let upcomingBestWindow: BestTimeRecommendation["upcomingBestWindow"] = null;
+
+  if (!isAllOptimal) {
+    const now = new Date();
+    const upcoming: { service: string; nextChange: Date }[] = [];
+
+    if (!claude.isBonus && claude.nextChangeAt) {
+      upcoming.push({ service: claude.name, nextChange: claude.nextChangeAt });
+    }
+    if (!gpt.isBonus && gpt.nextChangeAt) {
+      upcoming.push({ service: gpt.name, nextChange: gpt.nextChangeAt });
+    }
+    if (!glm5.isBonus && glm5.nextChangeAt) {
+      upcoming.push({ service: glm5.name, nextChange: glm5.nextChangeAt });
+    }
+    if (!glm5Turbo.isBonus && glm5Turbo.nextChangeAt) {
+      upcoming.push({ service: glm5Turbo.name, nextChange: glm5Turbo.nextChangeAt });
+    }
+
+    if (upcoming.length > 0) {
+      upcoming.sort((a, b) => a.nextChange.getTime() - b.nextChange.getTime());
+      const next = upcoming[0];
+      const diff = next.nextChange.getTime() - now.getTime();
+      upcomingBestWindow = {
+        time: next.nextChange.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        services: [next.service],
+        countdown: formatCountdown(diff),
+      };
+    }
+  }
+
+  let summary: string;
+  if (isAllOptimal) {
+    summary = "All services are at their best rates now!";
+  } else if (hasAnyBonus) {
+    const bestNames = nowBestServices.map((s) => s.name).join(", ");
+    summary = `${bestNames} ${nowBestServices.length === 1 ? "is" : "are"} at bonus rate now!`;
+  } else {
+    summary = "No services are at bonus rates currently.";
+  }
+
+  return {
+    nowBestServices,
+    upcomingBestWindow,
+    summary,
+    isAllOptimal,
+  };
+}
