@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   getClaudeStatus,
   getGPTStatus,
@@ -49,7 +50,7 @@ function AnimatedHeader() {
 
   return (
     <div className="flex flex-col items-center">
-      <h1 className="text-4xl font-extrabold tracking-tight text-zinc-100 sm:text-6xl flex items-center gap-0">
+      <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-6xl flex items-center gap-0">
         <span>has</span>
         <span className="relative inline-flex h-[1.3em] min-w-[4em] overflow-hidden justify-center mx-1">
           <span
@@ -114,11 +115,11 @@ function Timeline({
 
   return (
     <div className="mb-3">
-      <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-2">{label}</p>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">{label}</p>
       <div className="relative pt-7">
         {hoveredHour !== null && (
           <div
-            className="absolute top-0 -translate-x-1/2 px-1.5 py-0.5 rounded bg-zinc-700 text-[10px] text-zinc-200 whitespace-nowrap z-20 pointer-events-none"
+            className="absolute top-0 -translate-x-1/2 px-1.5 py-0.5 rounded bg-zinc-600 dark:bg-zinc-700 text-[10px] text-zinc-100 dark:text-zinc-200 whitespace-nowrap z-20 pointer-events-none"
             style={{ left: tooltipX }}
           >
             {hoveredHour.toString().padStart(2, "0")}:00
@@ -128,7 +129,7 @@ function Timeline({
           </div>
         )}
         <div 
-          className="relative h-2 rounded-full overflow-hidden bg-zinc-800/80 shadow-inner cursor-crosshair"
+          className="relative h-2 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800/80 shadow-inner cursor-crosshair"
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHoveredHour(null)}
         >
@@ -144,7 +145,7 @@ function Timeline({
           />
         </div>
       </div>
-      <div className="flex justify-between text-[9px] text-zinc-500 mt-1.5 px-0.5">
+      <div className="flex justify-between text-[9px] text-zinc-400 dark:text-zinc-500 mt-1.5 px-0.5">
         <span>0</span>
         <span>6</span>
         <span>12</span>
@@ -172,19 +173,19 @@ function CodexTimeline({ currentHour }: { currentHour: number }) {
 
   return (
     <div className="mb-3">
-      <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-2">Codex Peak Hours</p>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">Codex Peak Hours</p>
       <div className="relative pt-7">
         {hoveredHour !== null && (
           <div
-            className="absolute top-0 -translate-x-1/2 px-1.5 py-0.5 rounded bg-zinc-700 text-[10px] text-zinc-200 whitespace-nowrap z-20 pointer-events-none"
+            className="absolute top-0 -translate-x-1/2 px-1.5 py-0.5 rounded bg-zinc-600 dark:bg-zinc-700 text-[10px] text-zinc-100 dark:text-zinc-200 whitespace-nowrap z-20 pointer-events-none"
             style={{ left: tooltipX }}
           >
             {hoveredHour.toString().padStart(2, "0")}:00
-            <span className="ml-1 text-emerald-400">(2×)</span>
+            <span className="ml-1 text-emerald-400">(2x)</span>
           </div>
         )}
         <div 
-          className="relative h-2 rounded-full overflow-hidden bg-zinc-800/80 shadow-inner cursor-crosshair"
+          className="relative h-2 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800/80 shadow-inner cursor-crosshair"
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHoveredHour(null)}
         >
@@ -195,7 +196,7 @@ function CodexTimeline({ currentHour }: { currentHour: number }) {
           />
         </div>
       </div>
-      <p className="text-[9px] text-zinc-500 mt-1.5">24/7 active — no peak hours</p>
+      <p className="text-[9px] text-zinc-400 dark:text-zinc-500 mt-1.5">24/7 active - no peak hours</p>
     </div>
   );
 }
@@ -228,7 +229,7 @@ function BestTimeCard({ recommendation }: { recommendation: ReturnType<typeof ge
   }, [mounted, recommendation.upcomingBestWindow]);
 
   return (
-    <div className="relative rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 p-6 shadow-lg shadow-emerald-500/20">
+    <div className="relative rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 p-6 shadow-lg shadow-emerald-500/20 dark:shadow-emerald-500/20">
       <div className="absolute top-3 right-3">
         <span className="flex h-3 w-3">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -237,22 +238,22 @@ function BestTimeCard({ recommendation }: { recommendation: ReturnType<typeof ge
       </div>
 
       <div className="flex items-center gap-2 mb-3">
-        <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
-        <h2 className="text-xl font-bold text-zinc-100">Best Time to Use</h2>
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Best Time to Use</h2>
       </div>
 
-      <p className="text-sm text-zinc-300 mb-4">{recommendation.summary}</p>
+      <p className="text-sm text-zinc-600 dark:text-zinc-300 mb-4">{recommendation.summary}</p>
 
       {recommendation.nowBestServices.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {recommendation.nowBestServices.map((service) => (
             <span
               key={service.name}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-sm font-medium text-emerald-300"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/30 text-sm font-medium text-emerald-700 dark:text-emerald-300"
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
               {service.name} ({service.multiplier})
             </span>
           ))}
@@ -260,18 +261,18 @@ function BestTimeCard({ recommendation }: { recommendation: ReturnType<typeof ge
       )}
 
       {mounted && recommendation.upcomingBestWindow && (
-        <div className="mt-4 pt-4 border-t border-emerald-500/20">
-          <p className="text-xs text-zinc-400 mb-1">Next optimal window</p>
-          <p className="text-lg font-mono font-bold text-amber-400">{countdown}</p>
-          <p className="text-xs text-zinc-500 mt-1">
+        <div className="mt-4 pt-4 border-t border-emerald-200 dark:border-emerald-500/20">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">Next optimal window</p>
+          <p className="text-lg font-mono font-bold text-amber-600 dark:text-amber-400">{countdown}</p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-1">
             {recommendation.upcomingBestWindow.services.join(", ")} at {recommendation.upcomingBestWindow.time}
           </p>
         </div>
       )}
 
       {recommendation.isAllOptimal && (
-        <div className="mt-4 pt-4 border-t border-emerald-500/20">
-          <p className="text-emerald-400 font-semibold flex items-center gap-2">
+        <div className="mt-4 pt-4 border-t border-emerald-200 dark:border-emerald-500/20">
+          <p className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -332,15 +333,15 @@ function StatusCard({ status }: { status: ServiceStatus }) {
   }[status.statusColor];
 
   const multiplierColor = {
-    green: "text-emerald-400",
-    red: "text-red-400",
-    orange: "text-amber-400",
+    green: "text-emerald-600 dark:text-emerald-400",
+    red: "text-red-600 dark:text-red-400",
+    orange: "text-amber-600 dark:text-amber-400",
     gray: "text-zinc-500",
   }[status.statusColor];
 
   return (
     <div
-      className={`relative flex flex-col rounded-2xl border-2 ${bgColor} p-6 shadow-lg ${glowColor} transition-all duration-300 hover:scale-[1.02]`}
+      className={`relative flex flex-col rounded-2xl border-2 ${bgColor} p-6 shadow-lg ${glowColor} transition-all duration-300 hover:scale-[1.02] h-full`}
     >
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -350,7 +351,7 @@ function StatusCard({ status }: { status: ServiceStatus }) {
           {status.details && (
             <div className="group relative">
               <button
-                className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-300 text-xs font-bold text-zinc-600 hover:bg-zinc-400 dark:bg-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-600"
+                className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-700 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-600"
               >
                 i
               </button>
@@ -381,7 +382,7 @@ function StatusCard({ status }: { status: ServiceStatus }) {
       </p>
 
       {status.peakHoursLocal && (
-        <div className="mb-3 rounded-lg bg-zinc-100 px-3 py-2 dark:bg-zinc-800/50">
+        <div className="mb-3 rounded-lg bg-zinc-100 dark:bg-zinc-800/50 px-3 py-2">
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
             Peak Hours (Local)
           </p>
@@ -415,7 +416,10 @@ function StatusCard({ status }: { status: ServiceStatus }) {
   );
 }
 
-export default function Home() {
+const ALL_SERVICES = ["claude", "codex", "glm5", "glm5Turbo"] as const;
+type ServiceKey = typeof ALL_SERVICES[number];
+
+function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initialServices: ServiceKey[] }) {
   const [mounted, setMounted] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [statuses, setStatuses] = useState<{
@@ -426,10 +430,23 @@ export default function Home() {
   } | null>(null);
   const [recommendation, setRecommendation] = useState<ReturnType<typeof getBestTimeRecommendation> | null>(null);
   const [timezone, setTimezone] = useState("");
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [visibleServices, setVisibleServices] = useState<ServiceKey[]>(initialServices);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [showWidgetModal, setShowWidgetModal] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
     setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+    const saved = localStorage.getItem("theme") as "dark" | "light" | null;
+    if (saved) {
+      setTheme(saved);
+      document.documentElement.classList.toggle("dark", saved === "dark");
+    } else {
+      document.documentElement.classList.add("dark");
+    }
 
     const update = () => {
       const now = new Date();
@@ -445,13 +462,39 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setShowFilterMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const toggleService = (service: ServiceKey) => {
+    setVisibleServices((prev) => {
+      if (prev.includes(service)) {
+        return prev.filter((s) => s !== service);
+      }
+      return [...prev, service];
+    });
+  };
+
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     setMousePosition({ x: e.clientX, y: e.clientY });
   };
 
   if (!mounted || !statuses) {
     return (
-      <div className="flex min-h-screen items-center justify-center dark-grid-bg">
+      <div className={`flex min-h-screen items-center justify-center ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}>
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-emerald-500" />
         <div
           className="pointer-events-none fixed inset-0 z-0"
@@ -463,11 +506,45 @@ export default function Home() {
     );
   }
 
+  if (isWidget) {
+    return (
+      <div className={`min-h-screen p-4 ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}>
+        <div className="flex justify-center gap-4 flex-wrap">
+          {visibleServices.includes("claude") && <StatusCard status={statuses.claude} />}
+          {visibleServices.includes("codex") && <StatusCard status={statuses.gpt} />}
+          {visibleServices.includes("glm5") && <StatusCard status={statuses.glm5} />}
+          {visibleServices.includes("glm5Turbo") && <StatusCard status={statuses.glm5Turbo} />}
+        </div>
+        <div className="mt-4 flex justify-center gap-4 flex-wrap">
+          {visibleServices.includes("claude") && <Timeline peakRanges={getPeakRangesLocal(8, 14, -4, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="Claude Peak Hours" />}
+          {visibleServices.includes("codex") && <CodexTimeline currentHour={getCurrentLocalHour(new Date())} />}
+          {visibleServices.includes("glm5") && <Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5 Peak Hours" />}
+          {visibleServices.includes("glm5Turbo") && <Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5-Turbo Peak Hours" />}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
-      className="min-h-screen bg-zinc-50 dark-grid-bg px-4 py-8 sm:px-6 lg:px-8 relative overflow-hidden"
+      className={`min-h-screen px-4 py-8 sm:px-6 lg:px-8 relative overflow-hidden ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}
       onMouseMove={handleMouseMove}
     >
+      <button
+        onClick={toggleTheme}
+        className="fixed top-4 right-4 z-50 p-2 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
+        aria-label="Toggle theme"
+      >
+        {theme === "dark" ? (
+          <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        ) : (
+          <svg className="w-5 h-5 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        )}
+      </button>
       <div
         className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
         style={{
@@ -480,7 +557,7 @@ export default function Home() {
           <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400">
             Real-time AI service usage multiplier tracker
           </p>
-          <p className="mt-1 text-sm text-zinc-400 dark:text-zinc-500">
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
             Timezone: {timezone}
           </p>
         </header>
@@ -491,52 +568,131 @@ export default function Home() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <StatusCard status={statuses.claude} />
-          <StatusCard status={statuses.gpt} />
-          <StatusCard status={statuses.glm5} />
-          <StatusCard status={statuses.glm5Turbo} />
+        <div className="flex flex-wrap justify-center gap-6 items-stretch">
+          {visibleServices.includes("claude") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px] flex"><StatusCard status={statuses.claude} /></div>}
+          {visibleServices.includes("codex") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px] flex"><StatusCard status={statuses.gpt} /></div>}
+          {visibleServices.includes("glm5") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px] flex"><StatusCard status={statuses.glm5} /></div>}
+          {visibleServices.includes("glm5Turbo") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px] flex"><StatusCard status={statuses.glm5Turbo} /></div>}
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Timeline
-            peakRanges={getPeakRangesLocal(8, 14, -4, new Date())}
-            currentHour={getCurrentLocalHour(new Date())}
-            serviceColor="red"
-            label="Claude Peak Hours"
-          />
-          <CodexTimeline currentHour={getCurrentLocalHour(new Date())} />
-          <Timeline
-            peakRanges={getPeakRangesLocal(14, 18, 8, new Date())}
-            currentHour={getCurrentLocalHour(new Date())}
-            serviceColor="red"
-            label="GLM-5 Peak Hours"
-          />
-          <Timeline
-            peakRanges={getPeakRangesLocal(14, 18, 8, new Date())}
-            currentHour={getCurrentLocalHour(new Date())}
-            serviceColor="red"
-            label="GLM-5-Turbo Peak Hours"
-          />
+        <div className="mt-8 flex flex-wrap justify-center gap-6">
+          {visibleServices.includes("claude") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px]"><Timeline peakRanges={getPeakRangesLocal(8, 14, -4, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="Claude Peak Hours" /></div>}
+          {visibleServices.includes("codex") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px]"><CodexTimeline currentHour={getCurrentLocalHour(new Date())} /></div>}
+          {visibleServices.includes("glm5") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px]"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5 Peak Hours" /></div>}
+          {visibleServices.includes("glm5Turbo") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px]"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5-Turbo Peak Hours" /></div>}
         </div>
 
-        <footer className="mt-12 text-center text-xs text-zinc-400 dark:text-zinc-600">
+        <footer className="mt-12 text-center text-xs text-zinc-500">
           <p>
             Information may be inaccurate or outdated. For the most accurate data, please visit the official service websites.
           </p>
-          <p className="mt-2">
-            Built by{" "}
-            <a
-              href="https://www.omeraltinova.com.tr/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-500 hover:text-emerald-400 transition-colors"
+          <div className="mt-4 flex items-center justify-center gap-4 flex-wrap">
+            <div className="relative" ref={filterRef}>
+              <button
+                onClick={() => setShowFilterMenu(!showFilterMenu)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors text-zinc-700 dark:text-zinc-300"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Filter
+              </button>
+              {showFilterMenu && (
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-700 p-2 min-w-[140px] z-50">
+                  {[
+                    { key: "claude" as const, label: "Claude" },
+                    { key: "codex" as const, label: "Codex" },
+                    { key: "glm5" as const, label: "GLM-5" },
+                    { key: "glm5Turbo" as const, label: "GLM-5-Turbo" },
+                  ].map((service) => (
+                    <label
+                      key={service.key}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={visibleServices.includes(service.key)}
+                        onChange={() => toggleService(service.key)}
+                        className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-emerald-500 focus:ring-emerald-500"
+                      />
+                      <span className="text-sm text-zinc-700 dark:text-zinc-300">{service.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setShowWidgetModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 transition-colors"
             >
-              Faruk
-            </a>
-          </p>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              Get Widget
+            </button>
+            <span className="text-zinc-400">Built by{" "}
+              <a
+                href="https://www.omeraltinova.com.tr/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-500 hover:text-emerald-400 transition-colors"
+              >
+                Faruk
+              </a>
+            </span>
+          </div>
         </footer>
+
+        {showWidgetModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowWidgetModal(false)}>
+            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl max-w-lg w-full p-6" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Embed Widget</h3>
+                <button onClick={() => setShowWidgetModal(false)} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                Add this iframe to your website to embed the tracker. Use URL parameters to customize which services to show.
+              </p>
+              <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-3 font-mono text-xs break-all text-zinc-700 dark:text-zinc-300">
+                {`<iframe src="${typeof window !== "undefined" ? window.location.origin : ""}/?widget=true&services=${visibleServices.join(",")}" width="100%" height="600" frameborder="0"></iframe>`}
+              </div>
+              <div className="mt-4 flex gap-2 flex-wrap">
+                <span className="text-xs text-zinc-500">Parameters:</span>
+                <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-600 dark:text-zinc-400">?widget=true</code>
+                <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-600 dark:text-zinc-400">?services=codex,glm5</code>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+function HomeWithParams() {
+  const searchParams = useSearchParams();
+  const isWidget = searchParams.get("widget") === "true";
+  const servicesParam = searchParams.get("services");
+  
+  const initialServices: ServiceKey[] = servicesParam
+    ? servicesParam.split(",").filter((s): s is ServiceKey => ALL_SERVICES.includes(s as ServiceKey))
+    : [...ALL_SERVICES];
+
+  return <HomeContent isWidget={isWidget} initialServices={initialServices} />;
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center dark-grid-bg">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-emerald-500" />
+      </div>
+    }>
+      <HomeWithParams />
+    </Suspense>
   );
 }

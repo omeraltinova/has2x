@@ -9,6 +9,9 @@ A real-time tracker for AI service usage multipliers. Monitor when Claude, Codex
 - **Visual Timelines** — Interactive 24-hour peak hour visualizations
 - **Live Countdowns** — Time until next rate change
 - **Local Timezone Support** — All times converted to your browser's timezone
+- **Dark/Light Mode** — Toggle between themes, saved to localStorage
+- **Widget Mode** — Minimal UI for embedding via `?widget=true`
+- **Service Filter** — Show only the services you care about
 - **100% Client-Side** — No server calls, no API routes, all calculations run in your browser
 
 ## Supported Services
@@ -19,6 +22,15 @@ A real-time tracker for AI service usage multipliers. Monitor when Claude, Codex
 | **Codex** | None | 2× | 24/7 bonus until April 2, 2026 |
 | **GLM-5** | 2PM–6PM Beijing Time | 2× | Peak: 3× consumption |
 | **GLM-5-Turbo** | 2PM–6PM Beijing Time | 1× | Off-peak promo until April 30, 2026 |
+
+## URL Parameters
+
+| Parameter | Example | Description |
+|-----------|---------|-------------|
+| `widget` | `?widget=true` | Minimal UI without header/footer/theme toggle |
+| `services` | `?services=codex,glm5` | Show only specified services |
+
+Combine parameters: `?widget=true&services=codex,glm5`
 
 ## Getting Started
 
