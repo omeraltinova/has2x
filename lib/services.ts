@@ -305,6 +305,7 @@ export type BestTimeRecommendation = {
     time: string;
     services: string[];
     countdown: string;
+    nextChangeAt: Date;
   } | null;
   summary: string;
   isAllOptimal: boolean;
@@ -354,6 +355,7 @@ export function getBestTimeRecommendation(
         time: next.nextChange.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         services: [next.service],
         countdown: formatCountdown(diff),
+        nextChangeAt: next.nextChange,
       };
     }
   }
