@@ -18,7 +18,7 @@ import { BestTimeCard } from "@/app/components/BestTimeCard";
 import { StatusCard } from "@/app/components/StatusCard";
 import { WidgetCard } from "@/app/components/WidgetCard";
 
-const ALL_SERVICES = ["claude", "codex", "glm5", "glm5Turbo"] as const;
+const ALL_SERVICES = ["claude", "codex", "glm51", "glm5", "glm5Turbo"] as const;
 type ServiceKey = typeof ALL_SERVICES[number];
 
 function safeGetItem<T>(key: string, fallback: T): T {
@@ -37,6 +37,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
   const [statuses, setStatuses] = useState<{
     claude: ServiceStatus;
     gpt: ServiceStatus;
+    glm51: ServiceStatus;
     glm5: ServiceStatus;
     glm5Turbo: ServiceStatus;
   } | null>(null);
@@ -79,9 +80,9 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
       const now = new Date();
       const claude = getClaudeStatus(now);
       const gpt = getGPTStatus(now);
-      const { glm5, glm5Turbo } = getGLMStatus(now);
-      setStatuses({ claude, gpt, glm5, glm5Turbo });
-      setRecommendation(getBestTimeRecommendation(claude, gpt, glm5, glm5Turbo));
+      const { glm51, glm5, glm5Turbo } = getGLMStatus(now);
+      setStatuses({ claude, gpt, glm51, glm5, glm5Turbo });
+      setRecommendation(getBestTimeRecommendation(claude, gpt, glm51, glm5, glm5Turbo));
     };
 
     update();
@@ -150,6 +151,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
         <div className="flex flex-wrap justify-center gap-2">
           {visibleServices.includes("claude") && <WidgetCard status={statuses.claude} />}
           {visibleServices.includes("codex") && <WidgetCard status={statuses.gpt} />}
+          {visibleServices.includes("glm51") && <WidgetCard status={statuses.glm51} />}
           {visibleServices.includes("glm5") && <WidgetCard status={statuses.glm5} />}
           {visibleServices.includes("glm5Turbo") && <WidgetCard status={statuses.glm5Turbo} />}
         </div>
@@ -183,7 +185,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
           background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(16, 185, 129, 0.06), transparent 40%)`,
         }}
       />
-      <div className="mx-auto max-w-6xl relative z-10">
+      <div className="mx-auto max-w-7xl relative z-10">
         <header className="mb-10 text-center">
           <AnimatedHeader />
           <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400">
@@ -201,17 +203,19 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
         )}
 
         <div className="flex flex-wrap justify-center gap-6 items-stretch">
-          {visibleServices.includes("claude") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px] flex"><StatusCard status={statuses.claude} /></div>}
-          {visibleServices.includes("codex") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px] flex"><StatusCard status={statuses.gpt} /></div>}
-          {visibleServices.includes("glm5") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px] flex"><StatusCard status={statuses.glm5} /></div>}
-          {visibleServices.includes("glm5Turbo") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px] flex"><StatusCard status={statuses.glm5Turbo} /></div>}
+          {visibleServices.includes("claude") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_96px)/5)] lg:flex-shrink-0 flex"><StatusCard status={statuses.claude} /></div>}
+          {visibleServices.includes("codex") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_96px)/5)] lg:flex-shrink-0 flex"><StatusCard status={statuses.gpt} /></div>}
+          {visibleServices.includes("glm51") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_96px)/5)] lg:flex-shrink-0 flex"><StatusCard status={statuses.glm51} /></div>}
+          {visibleServices.includes("glm5") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_96px)/5)] lg:flex-shrink-0 flex"><StatusCard status={statuses.glm5} /></div>}
+          {visibleServices.includes("glm5Turbo") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_96px)/5)] lg:flex-shrink-0 flex"><StatusCard status={statuses.glm5Turbo} /></div>}
         </div>
 
         <div className="mt-8 flex flex-wrap justify-center gap-6">
-          {visibleServices.includes("claude") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px]"><Timeline peakRanges={getPeakRangesLocal(8, 14, -4, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="Claude Peak Hours" /></div>}
-          {visibleServices.includes("codex") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px]"><CodexTimeline currentHour={getCurrentLocalHour(new Date())} /></div>}
-          {visibleServices.includes("glm5") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px]"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5 Peak Hours" /></div>}
-          {visibleServices.includes("glm5Turbo") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-[350px]"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5-Turbo Peak Hours" /></div>}
+          {visibleServices.includes("claude") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_96px)/5)] lg:flex-shrink-0"><Timeline peakRanges={getPeakRangesLocal(5, 11, -7, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="Claude Peak Hours" /></div>}
+          {visibleServices.includes("codex") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_96px)/5)] lg:flex-shrink-0"><CodexTimeline currentHour={getCurrentLocalHour(new Date())} /></div>}
+          {visibleServices.includes("glm51") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_96px)/5)] lg:flex-shrink-0"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5.1 Peak Hours" /></div>}
+          {visibleServices.includes("glm5") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_96px)/5)] lg:flex-shrink-0"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5 Peak Hours" /></div>}
+          {visibleServices.includes("glm5Turbo") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_96px)/5)] lg:flex-shrink-0"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5-Turbo Peak Hours" /></div>}
         </div>
 
         <footer className="mt-12 text-center text-xs text-zinc-500">
@@ -223,7 +227,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
               <button
                 onClick={() => setShowFilterMenu(!showFilterMenu)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors ${
-                  visibleServices.length < 4 || !showBestTime
+                  visibleServices.length < 5 || !showBestTime
                     ? 'bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
                     : 'bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
                 }`}
@@ -231,7 +235,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                 </svg>
-                {visibleServices.length < 4 || !showBestTime ? 'Filtered' : 'Filter'}
+                {visibleServices.length < 5 || !showBestTime ? 'Filtered' : 'Filter'}
               </button>
               {showFilterMenu && (
                 <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-700 p-2 min-w-[180px] z-50">
@@ -247,6 +251,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                   {[
                     { key: "claude" as const, label: "Claude" },
                     { key: "codex" as const, label: "Codex" },
+                    { key: "glm51" as const, label: "GLM-5.1" },
                     { key: "glm5" as const, label: "GLM-5" },
                     { key: "glm5Turbo" as const, label: "GLM-5-Turbo" },
                   ].map((service) => (
@@ -313,6 +318,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                     {[
                       { key: "claude" as const, label: "Claude" },
                       { key: "codex" as const, label: "Codex" },
+                      { key: "glm51" as const, label: "GLM-5.1" },
                       { key: "glm5" as const, label: "GLM-5" },
                       { key: "glm5Turbo" as const, label: "GLM-5-Turbo" },
                     ].map((service) => (

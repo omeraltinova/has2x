@@ -13,91 +13,68 @@ export type ServiceStatus = {
   details?: string;
 };
 
-// Claude: Peak 8AM-2PM ET weekdays, off-peak = 2x
-// Promotion: March 13-27, 2026
+// Claude: Peak 5AM-11AM PT weekdays — reduced 5-hour session limits during peak
+// Weekly limits unchanged. Off-peak = normal session limits.
 export function getClaudeStatus(now: Date): ServiceStatus {
-  const promotionEnd = new Date("2026-03-28T06:59:00Z"); // March 27 11:59 PM PT = March 28 06:59 UTC
-  const promotionExpired = now >= promotionEnd;
+  // PT is currently PDT (UTC-7) in late March 2026
+  const ptOffset = -7;
+  const ptTime = new Date(now.getTime() + ptOffset * 60 * 60 * 1000);
+  const ptHour = ptTime.getUTCHours();
+  const ptDay = ptTime.getUTCDay(); // 0=Sun, 6=Sat
 
-  if (promotionExpired) {
-    return {
-      name: "Claude",
-      multiplier: "1×",
-      isBonus: false,
-      statusLabel: "Promotion Ended",
-      statusColor: "gray",
-      nextChangeAt: null,
-      nextChangeLabel: "",
-      promotionEnd,
-      promotionExpired: true,
-      peakHoursLocal: "",
-      description: "2x promotion ended on March 27.",
-      details: "Anthropic's Claude AI assistant. The 2× promotion has ended. Normal usage rates now apply.",
-    };
-  }
-
-  // Convert to ET (UTC-4 in March 2026 — EDT)
-  const etOffset = -4;
-  const etTime = new Date(now.getTime() + etOffset * 60 * 60 * 1000);
-  const etHour = etTime.getUTCHours();
-  const etDay = etTime.getUTCDay(); // 0=Sun, 6=Sat
-
-  const isWeekday = etDay >= 1 && etDay <= 5;
-  const isPeak = isWeekday && etHour >= 8 && etHour < 14;
+  const isWeekday = ptDay >= 1 && ptDay <= 5;
+  const isPeak = isWeekday && ptHour >= 5 && ptHour < 11;
 
   // Calculate next change
   let nextChangeAt: Date;
   if (isPeak) {
-    // Peak ends at 14:00 ET
-    const nextOff = new Date(etTime);
-    nextOff.setUTCHours(14, 0, 0, 0);
-    nextChangeAt = new Date(nextOff.getTime() - etOffset * 60 * 60 * 1000);
-  } else if (isWeekday && etHour < 8) {
+    // Peak ends at 11:00 PT
+    const nextOff = new Date(ptTime);
+    nextOff.setUTCHours(11, 0, 0, 0);
+    nextChangeAt = new Date(nextOff.getTime() - ptOffset * 60 * 60 * 1000);
+  } else if (isWeekday && ptHour < 5) {
     // Before peak starts today
-    const nextPeak = new Date(etTime);
-    nextPeak.setUTCHours(8, 0, 0, 0);
-    nextChangeAt = new Date(nextPeak.getTime() - etOffset * 60 * 60 * 1000);
-  } else if (isWeekday && etHour >= 14) {
+    const nextPeak = new Date(ptTime);
+    nextPeak.setUTCHours(5, 0, 0, 0);
+    nextChangeAt = new Date(nextPeak.getTime() - ptOffset * 60 * 60 * 1000);
+  } else if (isWeekday && ptHour >= 11) {
     // After peak, next peak is tomorrow (or Monday if Friday)
-    const nextPeak = new Date(etTime);
-    if (etDay === 5) {
+    const nextPeak = new Date(ptTime);
+    if (ptDay === 5) {
       // Friday -> Monday
       nextPeak.setUTCDate(nextPeak.getUTCDate() + 3);
     } else {
       nextPeak.setUTCDate(nextPeak.getUTCDate() + 1);
     }
-    nextPeak.setUTCHours(8, 0, 0, 0);
-    nextChangeAt = new Date(nextPeak.getTime() - etOffset * 60 * 60 * 1000);
+    nextPeak.setUTCHours(5, 0, 0, 0);
+    nextChangeAt = new Date(nextPeak.getTime() - ptOffset * 60 * 60 * 1000);
   } else {
-    // Weekend — next peak is Monday 8 AM ET
-    const daysUntilMonday = etDay === 0 ? 1 : 8 - etDay;
-    const nextPeak = new Date(etTime);
+    // Weekend — next peak is Monday 5 AM PT
+    const daysUntilMonday = ptDay === 0 ? 1 : 8 - ptDay;
+    const nextPeak = new Date(ptTime);
     nextPeak.setUTCDate(nextPeak.getUTCDate() + daysUntilMonday);
-    nextPeak.setUTCHours(8, 0, 0, 0);
-    nextChangeAt = new Date(nextPeak.getTime() - etOffset * 60 * 60 * 1000);
+    nextPeak.setUTCHours(5, 0, 0, 0);
+    nextChangeAt = new Date(nextPeak.getTime() - ptOffset * 60 * 60 * 1000);
   }
 
-  // Cap at promotion end
-  if (nextChangeAt > promotionEnd) {
-    nextChangeAt = promotionEnd;
-  }
-
-  const peakStartLocal = formatHourInLocal(8, etOffset, now);
-  const peakEndLocal = formatHourInLocal(14, etOffset, now);
+  const peakStartLocal = formatHourInLocal(5, ptOffset, now);
+  const peakEndLocal = formatHourInLocal(11, ptOffset, now);
 
   return {
     name: "Claude",
-    multiplier: isPeak ? "1×" : "2×",
+    multiplier: isPeak ? "↓" : "1×",
     isBonus: !isPeak,
-    statusLabel: isPeak ? "Normal Limit (Peak)" : "2× Limit Active!",
+    statusLabel: isPeak ? "Peak — Reduced Limits" : "Off-Peak — Normal Limits",
     statusColor: isPeak ? "red" : "green",
     nextChangeAt,
-    nextChangeLabel: isPeak ? "2× starts in" : "Peak starts in",
-    promotionEnd,
+    nextChangeLabel: isPeak ? "Off-peak starts in" : "Peak starts in",
+    promotionEnd: new Date("2099-12-31"),
     promotionExpired: false,
     peakHoursLocal: `${peakStartLocal} – ${peakEndLocal} (weekdays)`,
-    description: "2× usage during off-peak hours. Valid until March 27.",
-    details: "Anthropic's Claude AI assistant. Peak hours: 8AM-2PM ET weekdays. During peak, normal usage rates apply. Off-peak gets 2× message allowance.",
+    description: isPeak
+      ? "Peak hours active — 5-hour session limits are reduced. Weekly limits unchanged."
+      : "Off-peak — normal 5-hour session limits. Weekly limits unchanged.",
+    details: "Anthropic's Claude. Peak hours: 5AM-11AM PT weekdays. During peak, 5-hour session limits are lower than normal. Off-peak gets normal session limits. Weekly limits remain the same.",
   };
 }
 
@@ -140,8 +117,10 @@ export function getGPTStatus(now: Date): ServiceStatus {
 }
 
 // GLM-5: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 2×
+// GLM-5.1: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 1× (through end of April), then 2×
 // GLM-5-Turbo: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 1× (through end of April), then 2×
 export function getGLMStatus(now: Date): {
+  glm51: ServiceStatus;
   glm5: ServiceStatus;
   glm5Turbo: ServiceStatus;
 } {
@@ -220,7 +199,35 @@ export function getGLMStatus(now: Date): {
       : "Zhipu AI's GLM-5-Turbo. Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak: 1× until end of April, then 2×.",
   };
 
-  return { glm5, glm5Turbo };
+  const glm51PromoEnd = new Date("2026-04-30T23:59:59+08:00");
+  const glm51OffPeakExpired = now >= glm51PromoEnd;
+  const glm51Multiplier = isPeak ? "3×" : glm51OffPeakExpired ? "2×" : "1×";
+  const glm51IsBonus = !isPeak && !glm51OffPeakExpired;
+
+  const glm51: ServiceStatus = {
+    name: "GLM-5.1",
+    multiplier: glm51Multiplier,
+    isBonus: glm51IsBonus,
+    statusLabel: isPeak
+      ? "Peak — 3× Usage"
+      : glm51OffPeakExpired
+        ? "Off-Peak — 2× Usage"
+        : "Off-Peak — 1× Usage ⭐",
+    statusColor: isPeak ? "red" : glm51OffPeakExpired ? "orange" : "green",
+    nextChangeAt,
+    nextChangeLabel: isPeak ? "Off-peak starts in" : "Peak starts in",
+    promotionEnd: glm51PromoEnd,
+    promotionExpired: glm51OffPeakExpired,
+    peakHoursLocal,
+    description: glm51OffPeakExpired
+      ? "Peak: 3× consumption, Off-peak: 2×."
+      : "Peak: 3× consumption, Off-peak: 1× (through end of April).",
+    details: glm51OffPeakExpired
+      ? "Zhipu AI's GLM-5.1. Peak: 3× consumption, Off-peak: 2×."
+      : "Zhipu AI's GLM-5.1. Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak: 1× until end of April, then 2×.",
+  };
+
+  return { glm51, glm5, glm5Turbo };
 }
 
 function formatHourInLocal(
@@ -314,12 +321,14 @@ export type BestTimeRecommendation = {
 export function getBestTimeRecommendation(
   claude: ServiceStatus,
   gpt: ServiceStatus,
+  glm51: ServiceStatus,
   glm5: ServiceStatus,
   glm5Turbo: ServiceStatus
 ): BestTimeRecommendation {
   const services: BestTimeService[] = [
     { name: claude.name, multiplier: claude.multiplier, isBonus: claude.isBonus, isBest: claude.isBonus },
     { name: gpt.name, multiplier: gpt.multiplier, isBonus: gpt.isBonus, isBest: gpt.isBonus },
+    { name: glm51.name, multiplier: glm51.multiplier, isBonus: glm51.isBonus, isBest: glm51.isBonus },
     { name: glm5.name, multiplier: glm5.multiplier, isBonus: glm5.isBonus, isBest: glm5.isBonus },
     { name: glm5Turbo.name, multiplier: glm5Turbo.multiplier, isBonus: glm5Turbo.isBonus, isBest: glm5Turbo.isBonus },
   ];
@@ -339,6 +348,9 @@ export function getBestTimeRecommendation(
     }
     if (!gpt.isBonus && gpt.nextChangeAt) {
       upcoming.push({ service: gpt.name, nextChange: gpt.nextChangeAt });
+    }
+    if (!glm51.isBonus && glm51.nextChangeAt) {
+      upcoming.push({ service: glm51.name, nextChange: glm51.nextChangeAt });
     }
     if (!glm5.isBonus && glm5.nextChangeAt) {
       upcoming.push({ service: glm5.name, nextChange: glm5.nextChangeAt });
