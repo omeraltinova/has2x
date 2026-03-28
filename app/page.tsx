@@ -66,10 +66,13 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
     }
 
     const parsedServices = safeGetItem<string[]>("visibleServices", []);
+    const knownServices = safeGetItem<string[]>("knownServices", []);
     const validServices = parsedServices.filter((s): s is ServiceKey => ALL_SERVICES.includes(s as ServiceKey));
     if (validServices.length > 0) {
-      setVisibleServices(validServices);
+      const newServices = ALL_SERVICES.filter((s) => !knownServices.includes(s));
+      setVisibleServices([...validServices, ...newServices]);
     }
+    localStorage.setItem("knownServices", JSON.stringify([...ALL_SERVICES]));
 
     const savedShowBestTime = safeGetItem<boolean | null>("showBestTime", null);
     if (savedShowBestTime !== null) {
