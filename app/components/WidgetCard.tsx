@@ -55,8 +55,12 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
     },
   }[status.statusColor];
 
-  const isBonusService = status.name === "Claude" || status.name === "Codex";
-  const limitText = isBonusService ? `${status.multiplier} bonus limits` : `${status.multiplier} usage count`;
+  const getLimitText = () => {
+    if (status.name === "Claude") {
+      return status.multiplier === "↓" ? "reduced limits" : "normal limits";
+    }
+    return status.isBonus ? "bonus limits" : "usage count";
+  };
 
   const getServiceIcon = (name: string) => {
     switch (name) {
@@ -74,7 +78,7 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
   };
 
   return (
-    <div className={`relative rounded-xl border ${colorStyles.bg} ${colorStyles.border} p-4 flex items-center justify-between gap-4 min-w-[220px] shadow-sm hover:shadow-md transition-all duration-300 overflow-visible group/card`}>
+    <div className={`relative w-full sm:w-[270px] h-[92px] rounded-xl border ${colorStyles.bg} ${colorStyles.border} p-4 flex items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all duration-300 overflow-visible group/card`}>
       <div className="flex items-center gap-3">
         <div className={`p-2 rounded-lg bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800`}>
           {getServiceIcon(status.name)}
@@ -100,13 +104,13 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
               {status.multiplier}
             </span>
             <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-              {limitText.replace(status.multiplier, '').trim()}
+              {getLimitText()}
             </span>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col items-end gap-1 text-right">
+      <div className="flex flex-col items-end gap-1 text-right shrink-0">
         <div className="flex items-center gap-1.5">
           <span className="relative flex h-2 w-2">
             {status.statusColor === "green" && (
