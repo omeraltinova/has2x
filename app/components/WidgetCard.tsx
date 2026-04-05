@@ -45,11 +45,11 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
   }[status.statusColor];
 
   const isBonusService = status.name === "Claude" || status.name === "Codex";
-  const limitText = isBonusService ? `${status.multiplier} bonus limits` : `${status.multiplier} usage count`;
+  const limitText = isBonusService ? "bonus limits" : "usage count";
 
   return (
     <div
-      className={`relative rounded-xl border ${bgColor} p-4 flex items-center justify-between gap-4 min-w-[220px] transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 shadow-sm hover:shadow-md ${glowColor} overflow-visible group/card`}
+      className={`relative rounded-xl border ${bgColor} p-4 flex items-center justify-between gap-4 w-[240px] transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 shadow-sm hover:shadow-md ${glowColor} overflow-visible group/card shrink-0`}
     >
       {/* Subtle pulse effect for the border on hover */}
       <div className="absolute inset-0 rounded-xl border-2 border-transparent transition-colors duration-500 group-hover/card:border-white/10 dark:group-hover/card:border-white/5 pointer-events-none"></div>
