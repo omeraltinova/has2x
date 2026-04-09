@@ -78,9 +78,9 @@ export function getClaudeStatus(now: Date): ServiceStatus {
   };
 }
 
-// GPT: 2x all the time until April 2, 2026
+// GPT: 2x all the time until May 31, 2026 (Pro subscriptions only)
 export function getGPTStatus(now: Date): ServiceStatus {
-  const promotionEnd = new Date("2026-04-02T23:59:59Z");
+  const promotionEnd = new Date("2026-05-31T23:59:59Z");
   const promotionExpired = now >= promotionEnd;
 
   if (promotionExpired) {
@@ -95,8 +95,8 @@ export function getGPTStatus(now: Date): ServiceStatus {
       promotionEnd,
       promotionExpired: true,
       peakHoursLocal: "",
-      description: "2x promotion ended on April 2.",
-      details: "OpenAI's ChatGPT/Codex. The 2× promotion has ended. Normal usage rates now apply.",
+      description: "2x Pro promotion ended on May 31.",
+      details: "OpenAI's ChatGPT/Codex. The 2× Pro promotion has ended. Normal usage rates now apply.",
     };
   }
 
@@ -110,9 +110,9 @@ export function getGPTStatus(now: Date): ServiceStatus {
     nextChangeLabel: "Promotion ends in",
     promotionEnd,
     promotionExpired: false,
-    peakHoursLocal: `None — 24/7 active until Apr 2`,
-    description: `2× usage around the clock. Valid until April 2, 2026.`,
-    details: "OpenAI's ChatGPT/Codex. Currently offering 2× message allowance 24/7. No peak hours during this promotion.",
+    peakHoursLocal: `None — 24/7 active until May 31`,
+    description: `2× usage around the clock for Pro subs. Valid until May 31, 2026.`,
+    details: "OpenAI's ChatGPT/Codex. Currently offering 2× message allowance 24/7 for Pro subscriptions only. No peak hours during this promotion.",
   };
 }
 

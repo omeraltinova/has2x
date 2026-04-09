@@ -15,9 +15,9 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
         setCountdown("00:00");
         return;
       }
-      const hours = Math.floor(diff / 3600000);
-      const minutes = Math.floor((diff % 3600000) / 60000);
-      setCountdown(`${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`);
+      const days = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      setCountdown(`${days}d ${hours}h`);
     };
     tick();
     const interval = setInterval(tick, 60000);
