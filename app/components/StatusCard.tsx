@@ -1,34 +1,31 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { formatCountdown, type ServiceStatus } from "@/lib/services";
+import { useHasHydrated } from "@/lib/useHasHydrated";
 
 export function StatusCard({ status }: { status: ServiceStatus }) {
-  const nextChangeRef = useRef<Date | null>(null);
   const [countdown, setCountdown] = useState("");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const isHydrated = useHasHydrated();
 
   useEffect(() => {
-    nextChangeRef.current = status.nextChangeAt;
-  }, [status.nextChangeAt]);
+    if (!isHydrated || !status.nextChangeAt) return;
 
-  useEffect(() => {
-    if (!mounted) return;
+    const nextChangeAt = status.nextChangeAt;
+
     const tick = () => {
-      const target = nextChangeRef.current;
-      if (!target) {
-        setCountdown("");
-        return;
-      }
-      const diff = target.getTime() - Date.now();
+      const diff = nextChangeAt.getTime() - Date.now();
       setCountdown(formatCountdown(diff));
     };
-    tick();
-    const interval = setInterval(tick, 200);
-    return () => clearInterval(interval);
-  }, [mounted]);
+
+    const timeoutId = window.setTimeout(tick, 0);
+    const intervalId = window.setInterval(tick, 200);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
+    };
+  }, [isHydrated, status.nextChangeAt]);
 
   const bgColor = {
     green: "border-emerald-500/40 bg-emerald-500/5",
@@ -111,7 +108,7 @@ export function StatusCard({ status }: { status: ServiceStatus }) {
         </div>
       )}
 
-      {mounted && countdown && (
+      {isHydrated && status.nextChangeAt && countdown && (
         <div className="mt-auto pt-3 border-t border-zinc-200 dark:border-zinc-700/50">
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">
             {status.nextChangeLabel}

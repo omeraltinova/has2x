@@ -5,24 +5,29 @@ import {
   formatCountdown,
   getBestTimeRecommendation,
 } from "@/lib/services";
+import { useHasHydrated } from "@/lib/useHasHydrated";
 
 export function BestTimeCard({ recommendation }: { recommendation: ReturnType<typeof getBestTimeRecommendation> }) {
   const [countdown, setCountdown] = useState("");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const isHydrated = useHasHydrated();
 
   useEffect(() => {
-    if (!mounted || !recommendation.upcomingBestWindow) return;
+    if (!isHydrated || !recommendation.upcomingBestWindow) return;
+
     const targetDate = recommendation.upcomingBestWindow.nextChangeAt;
     const tick = () => {
       const diff = targetDate.getTime() - Date.now();
       setCountdown(formatCountdown(diff));
     };
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, [mounted, recommendation.upcomingBestWindow]);
+
+    const timeoutId = window.setTimeout(tick, 0);
+    const intervalId = window.setInterval(tick, 1000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
+    };
+  }, [isHydrated, recommendation.upcomingBestWindow]);
 
   return (
     <div className="relative rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 p-6 shadow-lg shadow-emerald-500/20 dark:shadow-emerald-500/20">
@@ -56,7 +61,7 @@ export function BestTimeCard({ recommendation }: { recommendation: ReturnType<ty
         </div>
       )}
 
-      {mounted && recommendation.upcomingBestWindow && (
+      {isHydrated && recommendation.upcomingBestWindow && (
         <div className="mt-4 pt-4 border-t border-emerald-200 dark:border-emerald-500/20">
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">Next optimal window</p>
           <p className="text-lg font-mono font-bold text-amber-600 dark:text-amber-400">{countdown}</p>

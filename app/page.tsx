@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useHasHydrated } from "@/lib/useHasHydrated";
 import {
   getClaudeStatus,
   getGPTStatus,
@@ -9,6 +11,8 @@ import {
   getPeakRangesLocal,
   getCurrentLocalHour,
   getBestTimeRecommendation,
+  PROVIDERS,
+  type ProviderKey,
   type ServiceStatus,
 } from "@/lib/services";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
@@ -32,7 +36,6 @@ function safeGetItem<T>(key: string, fallback: T): T {
 }
 
 function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initialServices: ServiceKey[] }) {
-  const [mounted, setMounted] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [statuses, setStatuses] = useState<{
     claude: ServiceStatus;
@@ -52,45 +55,57 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
   const [widgetWidth, setWidgetWidth] = useState("100%");
   const [widgetHeight, setWidgetHeight] = useState("400");
   const filterRef = useRef<HTMLDivElement>(null);
+  const isHydrated = useHasHydrated();
 
   useEffect(() => {
-    setMounted(true);
-    setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    let intervalId: number | null = null;
 
-    const saved = safeGetItem<string | null>("theme", null);
-    if (saved === "dark" || saved === "light") {
-      setTheme(saved);
-      document.documentElement.classList.toggle("dark", saved === "dark");
-    } else {
-      document.documentElement.classList.add("dark");
-    }
+    const initialize = () => {
+      setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
 
-    const parsedServices = safeGetItem<string[]>("visibleServices", []);
-    const knownServices = safeGetItem<string[]>("knownServices", []);
-    const validServices = parsedServices.filter((s): s is ServiceKey => ALL_SERVICES.includes(s as ServiceKey));
-    if (validServices.length > 0) {
-      const newServices = ALL_SERVICES.filter((s) => !knownServices.includes(s));
-      setVisibleServices([...validServices, ...newServices]);
-    }
-    localStorage.setItem("knownServices", JSON.stringify([...ALL_SERVICES]));
+      const saved = safeGetItem<string | null>("theme", null);
+      if (saved === "dark" || saved === "light") {
+        setTheme(saved);
+        document.documentElement.classList.toggle("dark", saved === "dark");
+      } else {
+        document.documentElement.classList.add("dark");
+      }
 
-    const savedShowBestTime = safeGetItem<boolean | null>("showBestTime", null);
-    if (savedShowBestTime !== null) {
-      setShowBestTime(savedShowBestTime);
-    }
+      const parsedServices = safeGetItem<string[]>("visibleServices", []);
+      const knownServices = safeGetItem<string[]>("knownServices", []);
+      const validServices = parsedServices.filter((s): s is ServiceKey => ALL_SERVICES.includes(s as ServiceKey));
+      if (validServices.length > 0) {
+        const newServices = ALL_SERVICES.filter((s) => !knownServices.includes(s));
+        setVisibleServices([...validServices, ...newServices]);
+      }
+      localStorage.setItem("knownServices", JSON.stringify([...ALL_SERVICES]));
 
-    const update = () => {
-      const now = new Date();
-      const claude = getClaudeStatus(now);
-      const gpt = getGPTStatus(now);
-      const { glm51, glm5, glm5Turbo } = getGLMStatus(now);
-      setStatuses({ claude, gpt, glm51, glm5, glm5Turbo });
-      setRecommendation(getBestTimeRecommendation(claude, gpt, glm51, glm5, glm5Turbo));
+      const savedShowBestTime = safeGetItem<boolean | null>("showBestTime", null);
+      if (savedShowBestTime !== null) {
+        setShowBestTime(savedShowBestTime);
+      }
+
+      const update = () => {
+        const now = new Date();
+        const claude = getClaudeStatus(now);
+        const gpt = getGPTStatus(now);
+        const { glm51, glm5, glm5Turbo } = getGLMStatus(now);
+        setStatuses({ claude, gpt, glm51, glm5, glm5Turbo });
+        setRecommendation(getBestTimeRecommendation(claude, gpt, glm51, glm5, glm5Turbo));
+      };
+
+      update();
+      intervalId = window.setInterval(update, 30000);
     };
 
-    update();
-    const interval = setInterval(update, 30000);
-    return () => clearInterval(interval);
+    const timeoutId = window.setTimeout(initialize, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (intervalId !== null) {
+        window.clearInterval(intervalId);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -102,12 +117,6 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    if (showWidgetModal) {
-      setWidgetPreviewServices(visibleServices);
-    }
-  }, [showWidgetModal, visibleServices]);
 
   useEffect(() => {
     localStorage.setItem("visibleServices", JSON.stringify(visibleServices));
@@ -134,7 +143,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
     setMousePosition({ x: e.clientX, y: e.clientY });
   };
 
-  if (!mounted || !statuses) {
+  if (!isHydrated || !statuses) {
     return (
       <div className={`flex min-h-screen items-center justify-center ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}>
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-emerald-500" />
@@ -197,6 +206,25 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
             Timezone: {timezone}
           </p>
+          <nav className="mt-5 flex justify-center gap-3">
+            {(Object.entries(PROVIDERS) as [ProviderKey, typeof PROVIDERS[ProviderKey]][]).map(([key, p]) => {
+              const colorMap: Record<string, { bg: string; border: string; text: string }> = {
+                orange: { bg: "bg-orange-500/10 dark:bg-orange-500/5", border: "border-orange-500/30 hover:border-orange-500/50", text: "text-orange-600 dark:text-orange-400" },
+                green: { bg: "bg-emerald-500/10 dark:bg-emerald-500/5", border: "border-emerald-500/30 hover:border-emerald-500/50", text: "text-emerald-600 dark:text-emerald-400" },
+                cyan: { bg: "bg-cyan-500/10 dark:bg-cyan-500/5", border: "border-cyan-500/30 hover:border-cyan-500/50", text: "text-cyan-600 dark:text-cyan-400" },
+              };
+              const c = colorMap[p.color] || colorMap.green;
+              return (
+                <Link
+                  key={key}
+                  href={`/${key}`}
+                  className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${c.bg} ${c.border} ${c.text}`}
+                >
+                  {p.name}
+                </Link>
+              );
+            })}
+          </nav>
         </header>
 
         {recommendation && showBestTime && (
@@ -275,7 +303,10 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
               )}
             </div>
             <button
-              onClick={() => setShowWidgetModal(true)}
+              onClick={() => {
+                setWidgetPreviewServices(visibleServices);
+                setShowWidgetModal(true);
+              }}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

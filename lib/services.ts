@@ -1,3 +1,31 @@
+export type ProviderKey = "claude" | "codex" | "glm";
+
+export const PROVIDERS: Record<ProviderKey, {
+  name: string;
+  services: string[];
+  color: string;
+  description: string;
+}> = {
+  claude: {
+    name: "Claude",
+    services: ["claude"],
+    color: "orange",
+    description: "Anthropic's AI assistant",
+  },
+  codex: {
+    name: "Codex",
+    services: ["codex"],
+    color: "green",
+    description: "OpenAI's coding model",
+  },
+  glm: {
+    name: "GLM",
+    services: ["glm51", "glm5", "glm5Turbo"],
+    color: "cyan",
+    description: "Zhipu AI's model family",
+  },
+};
+
 export type ServiceStatus = {
   name: string;
   multiplier: string;
