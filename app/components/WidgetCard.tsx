@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Info, Bot, Cpu, Sparkles, MessageSquare, Zap } from "lucide-react";
+import { Info, Bot, Cpu, Sparkles, MessageSquare, Zap, Smartphone } from "lucide-react";
 import type { ServiceStatus } from "@/lib/services";
 
 export function WidgetCard({ status }: { status: ServiceStatus }) {
@@ -72,6 +72,8 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
         return <Sparkles className={`w-5 h-5 ${colorStyles.icon}`} />;
       case "GLM-5-Turbo":
         return <Zap className={`w-5 h-5 ${colorStyles.icon}`} />;
+      case "Xiaomi":
+        return <Smartphone className={`w-5 h-5 ${colorStyles.icon}`} />;
       default:
         return <Cpu className={`w-5 h-5 ${colorStyles.icon}`} />;
     }

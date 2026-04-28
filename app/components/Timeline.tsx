@@ -17,23 +17,27 @@ export function Timeline({
   const [hoveredHour, setHoveredHour] = useState<number | null>(null);
   const [tooltipX, setTooltipX] = useState(0);
 
+  const peakIsBonus = serviceColor === "green";
   const gradientStops: string[] = [];
-  
+
   for (let hour = 0; hour < 24; hour++) {
     const isInPeak = peakRanges.some(
       (r) => hour >= r.startHour && hour < r.endHour
     );
     const pct = (hour / 24) * 100;
     const nextPct = ((hour + 1) / 24) * 100;
-    
-    if (isInPeak) {
+
+    let rgba: string;
+    if (peakIsBonus) {
+      rgba = isInPeak ? "rgba(16, 185, 129, 0.5)" : "rgba(113, 113, 122, 0.3)";
+    } else if (isInPeak) {
       const color = serviceColor === "red" ? "239, 68, 68" : "245, 158, 11";
-      gradientStops.push(`rgba(${color}, 0.5) ${pct}%`);
-      gradientStops.push(`rgba(${color}, 0.5) ${nextPct}%`);
+      rgba = `rgba(${color}, 0.5)`;
     } else {
-      gradientStops.push(`rgba(16, 185, 129, 0.4) ${pct}%`);
-      gradientStops.push(`rgba(16, 185, 129, 0.4) ${nextPct}%`);
+      rgba = "rgba(16, 185, 129, 0.4)";
     }
+    gradientStops.push(`${rgba} ${pct}%`);
+    gradientStops.push(`${rgba} ${nextPct}%`);
   }
 
   const currentPct = ((currentHour + 0.5) / 24) * 100;
@@ -74,8 +78,24 @@ export function Timeline({
             style={{ left: tooltipX }}
           >
             {hoveredHour.toString().padStart(2, "0")}:00
-            <span className={`ml-1 ${isHoveredPeak ? "text-red-400" : "text-emerald-400"}`}>
-              {isHoveredPeak ? "(Peak)" : "(Off-peak)"}
+            <span
+              className={`ml-1 ${
+                peakIsBonus
+                  ? isHoveredPeak
+                    ? "text-emerald-400"
+                    : "text-zinc-400"
+                  : isHoveredPeak
+                    ? "text-red-400"
+                    : "text-emerald-400"
+              }`}
+            >
+              {peakIsBonus
+                ? isHoveredPeak
+                  ? "(Bonus)"
+                  : "(Standard)"
+                : isHoveredPeak
+                  ? "(Peak)"
+                  : "(Off-peak)"}
             </span>
           </div>
         )}

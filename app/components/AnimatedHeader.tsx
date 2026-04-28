@@ -6,6 +6,7 @@ const SERVICES = [
   { name: "Claude", color: "text-orange-400" },
   { name: "Codex", color: "text-green-400" },
   { name: "GLM", color: "text-cyan-400" },
+  { name: "Xiaomi", color: "text-yellow-400" },
 ];
 
 export function AnimatedHeader() {
