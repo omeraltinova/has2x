@@ -1,4 +1,4 @@
-export type ProviderKey = "claude" | "codex" | "glm";
+export type ProviderKey = "claude" | "codex" | "glm" | "xiaomi";
 
 export const PROVIDERS: Record<ProviderKey, {
   name: string;
@@ -23,6 +23,12 @@ export const PROVIDERS: Record<ProviderKey, {
     services: ["glm51", "glm5", "glm5Turbo"],
     color: "cyan",
     description: "Zhipu AI's model family",
+  },
+  xiaomi: {
+    name: "Xiaomi",
+    services: ["xiaomi"],
+    color: "yellow",
+    description: "Xiaomi's token plan",
   },
 };
 
@@ -145,14 +151,14 @@ export function getGPTStatus(now: Date): ServiceStatus {
 }
 
 // GLM-5: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 2×
-// GLM-5.1: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 1× (through end of April), then 2×
-// GLM-5-Turbo: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 1× (through end of April), then 2×
+// GLM-5.1: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 1× (through end of June), then 2×
+// GLM-5-Turbo: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 1× (through end of June), then 2×
 export function getGLMStatus(now: Date): {
   glm51: ServiceStatus;
   glm5: ServiceStatus;
   glm5Turbo: ServiceStatus;
 } {
-  const turboPromoEnd = new Date("2026-04-30T23:59:59+08:00");
+  const turboPromoEnd = new Date("2026-06-30T23:59:59+08:00");
 
   const utc8Offset = 8;
   const utc8Time = new Date(now.getTime() + utc8Offset * 60 * 60 * 1000);
@@ -221,13 +227,13 @@ export function getGLMStatus(now: Date): {
     peakHoursLocal,
     description: turboOffPeakExpired
       ? "Peak: 3× consumption, Off-peak: 2×."
-      : "Peak: 3× consumption, Off-peak: 1× (through end of April).",
+      : "Peak: 3× consumption, Off-peak: 1× (through end of June).",
     details: turboOffPeakExpired
       ? "Zhipu AI's GLM-5-Turbo. Peak: 3× consumption, Off-peak: 2×."
-      : "Zhipu AI's GLM-5-Turbo. Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak: 1× until end of April, then 2×.",
+      : "Zhipu AI's GLM-5-Turbo. Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak: 1× until end of June, then 2×.",
   };
 
-  const glm51PromoEnd = new Date("2026-04-30T23:59:59+08:00");
+  const glm51PromoEnd = new Date("2026-06-30T23:59:59+08:00");
   const glm51OffPeakExpired = now >= glm51PromoEnd;
   const glm51Multiplier = isPeak ? "3×" : glm51OffPeakExpired ? "2×" : "1×";
   const glm51IsBonus = !isPeak && !glm51OffPeakExpired;
@@ -249,13 +255,51 @@ export function getGLMStatus(now: Date): {
     peakHoursLocal,
     description: glm51OffPeakExpired
       ? "Peak: 3× consumption, Off-peak: 2×."
-      : "Peak: 3× consumption, Off-peak: 1× (through end of April).",
+      : "Peak: 3× consumption, Off-peak: 1× (through end of June).",
     details: glm51OffPeakExpired
       ? "Zhipu AI's GLM-5.1. Peak: 3× consumption, Off-peak: 2×."
-      : "Zhipu AI's GLM-5.1. Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak: 1× until end of April, then 2×.",
+      : "Zhipu AI's GLM-5.1. Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak: 1× until end of June, then 2×.",
   };
 
   return { glm51, glm5, glm5Turbo };
+}
+
+// Xiaomi token plan: 0.8× consumption between 16:00–24:00 UTC, 1× otherwise.
+export function getXiaomiStatus(now: Date): ServiceStatus {
+  const utcHour = now.getUTCHours();
+  const isBonus = utcHour >= 16 && utcHour < 24;
+
+  let nextChangeAt: Date;
+  if (isBonus) {
+    const next = new Date(now);
+    next.setUTCDate(next.getUTCDate() + 1);
+    next.setUTCHours(0, 0, 0, 0);
+    nextChangeAt = next;
+  } else {
+    const next = new Date(now);
+    next.setUTCHours(16, 0, 0, 0);
+    nextChangeAt = next;
+  }
+
+  const startLocal = formatHourInLocal(16, 0, now);
+  const endLocal = formatHourInLocal(24, 0, now);
+
+  return {
+    name: "Xiaomi",
+    multiplier: isBonus ? "0.8×" : "1×",
+    isBonus,
+    statusLabel: isBonus ? "Bonus — 0.8× Usage" : "Standard — 1× Usage",
+    statusColor: isBonus ? "green" : "gray",
+    nextChangeAt,
+    nextChangeLabel: isBonus ? "Bonus ends in" : "Bonus starts in",
+    promotionEnd: new Date("2099-12-31"),
+    promotionExpired: false,
+    peakHoursLocal: `${startLocal} – ${endLocal}`,
+    description: isBonus
+      ? "Bonus window: 0.8× consumption. Outside the window: 1×."
+      : "Standard 1× consumption. 0.8× bonus runs 16:00–24:00 UTC.",
+    details: "Xiaomi's token plan. Between 16:00 and 24:00 UTC, messages count as 0.8× instead of the standard 1×.",
+  };
 }
 
 function formatHourInLocal(
@@ -351,7 +395,8 @@ export function getBestTimeRecommendation(
   gpt: ServiceStatus,
   glm51: ServiceStatus,
   glm5: ServiceStatus,
-  glm5Turbo: ServiceStatus
+  glm5Turbo: ServiceStatus,
+  xiaomi: ServiceStatus
 ): BestTimeRecommendation {
   const services: BestTimeService[] = [
     { name: claude.name, multiplier: claude.multiplier, isBonus: claude.isBonus, isBest: claude.isBonus },
@@ -359,6 +404,7 @@ export function getBestTimeRecommendation(
     { name: glm51.name, multiplier: glm51.multiplier, isBonus: glm51.isBonus, isBest: glm51.isBonus },
     { name: glm5.name, multiplier: glm5.multiplier, isBonus: glm5.isBonus, isBest: glm5.isBonus },
     { name: glm5Turbo.name, multiplier: glm5Turbo.multiplier, isBonus: glm5Turbo.isBonus, isBest: glm5Turbo.isBonus },
+    { name: xiaomi.name, multiplier: xiaomi.multiplier, isBonus: xiaomi.isBonus, isBest: xiaomi.isBonus },
   ];
 
   const nowBestServices = services.filter((s) => s.isBest);
@@ -385,6 +431,9 @@ export function getBestTimeRecommendation(
     }
     if (!glm5Turbo.isBonus && glm5Turbo.nextChangeAt) {
       upcoming.push({ service: glm5Turbo.name, nextChange: glm5Turbo.nextChangeAt });
+    }
+    if (!xiaomi.isBonus && xiaomi.nextChangeAt) {
+      upcoming.push({ service: xiaomi.name, nextChange: xiaomi.nextChangeAt });
     }
 
     if (upcoming.length > 0) {

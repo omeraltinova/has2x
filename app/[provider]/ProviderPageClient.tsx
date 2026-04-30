@@ -7,6 +7,7 @@ import {
   getClaudeStatus,
   getGPTStatus,
   getGLMStatus,
+  getXiaomiStatus,
   getPeakRangesLocal,
   getCurrentLocalHour,
   PROVIDERS,
@@ -36,6 +37,12 @@ const PROVIDER_COLORS: Record<string, { bg: string; border: string; text: string
     text: "text-cyan-600 dark:text-cyan-400",
     hoverBg: "hover:bg-cyan-500/10",
   },
+  yellow: {
+    bg: "bg-yellow-500/10 dark:bg-yellow-500/5",
+    border: "border-yellow-500/30 hover:border-yellow-500/50",
+    text: "text-yellow-600 dark:text-yellow-400",
+    hoverBg: "hover:bg-yellow-500/10",
+  },
 };
 
 function safeGetItem<T>(key: string, fallback: T): T {
@@ -57,6 +64,7 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
     glm51: ServiceStatus;
     glm5: ServiceStatus;
     glm5Turbo: ServiceStatus;
+    xiaomi: ServiceStatus;
   } | null>(null);
   const [timezone, setTimezone] = useState("");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -81,7 +89,8 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
         const claude = getClaudeStatus(now);
         const gpt = getGPTStatus(now);
         const { glm51, glm5, glm5Turbo } = getGLMStatus(now);
-        setStatuses({ claude, gpt, glm51, glm5, glm5Turbo });
+        const xiaomi = getXiaomiStatus(now);
+        setStatuses({ claude, gpt, glm51, glm5, glm5Turbo, xiaomi });
       };
 
       update();
@@ -132,6 +141,7 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
   if (providerServices.includes("glm51")) serviceCards.push({ key: "glm51", status: statuses.glm51 });
   if (providerServices.includes("glm5")) serviceCards.push({ key: "glm5", status: statuses.glm5 });
   if (providerServices.includes("glm5Turbo")) serviceCards.push({ key: "glm5Turbo", status: statuses.glm5Turbo });
+  if (providerServices.includes("xiaomi")) serviceCards.push({ key: "xiaomi", status: statuses.xiaomi });
 
   return (
     <div
@@ -251,6 +261,11 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
           {providerServices.includes("glm5Turbo") && (
             <div className="w-full">
               <Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5-Turbo Peak Hours" />
+            </div>
+          )}
+          {providerServices.includes("xiaomi") && (
+            <div className="w-full">
+              <Timeline peakRanges={getPeakRangesLocal(16, 24, 0, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="green" label="Xiaomi Bonus Hours" />
             </div>
           )}
         </div>
