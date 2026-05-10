@@ -49,7 +49,7 @@ export default function OGImage() {
               Codex
             </span>
             <span style={{ fontSize: 88, fontWeight: 800, color: "#fb923c", letterSpacing: "-0.02em" }}>
-              Claude
+              Claude Code
             </span>
             <span style={{ fontSize: 58, fontWeight: 800, color: "#22d3ee", opacity: 0.45, letterSpacing: "-0.02em", transform: "scale(0.95)" }}>
               GLM

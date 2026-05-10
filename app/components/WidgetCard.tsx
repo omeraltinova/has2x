@@ -56,7 +56,7 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
   }[status.statusColor];
 
   const getLimitText = () => {
-    if (status.name === "Claude") {
+    if (status.name.startsWith("Claude")) {
       return status.multiplier === "↓" ? "reduced limits" : "normal limits";
     }
     return status.isBonus ? "bonus limits" : "usage count";
@@ -65,6 +65,7 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
   const getServiceIcon = (name: string) => {
     switch (name) {
       case "Claude":
+      case "Claude Code":
         return <Bot className={`w-5 h-5 ${colorStyles.icon}`} />;
       case "Codex":
         return <MessageSquare className={`w-5 h-5 ${colorStyles.icon}`} />;

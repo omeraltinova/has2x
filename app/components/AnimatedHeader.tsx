@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 
 const SERVICES = [
-  { name: "Claude", color: "text-orange-400" },
+  { name: "Claude Code", color: "text-orange-400" },
   { name: "Codex", color: "text-green-400" },
   { name: "GLM", color: "text-cyan-400" },
   { name: "Xiaomi", color: "text-yellow-400" },
@@ -41,7 +41,7 @@ export function AnimatedHeader() {
     <div className="flex flex-col items-center">
       <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-6xl flex items-center gap-0">
         <span>has</span>
-        <span className="relative inline-flex h-[1.3em] min-w-[4em] overflow-hidden justify-center mx-1">
+        <span className="relative inline-flex h-[1.3em] min-w-[6.2em] overflow-hidden justify-center mx-1">
           <span
             className={`inline-flex items-center justify-center transition-all duration-500 ease-out ${transform} ${SERVICES[activeIndex].color}`}
           >

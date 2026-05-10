@@ -7,10 +7,10 @@ export const PROVIDERS: Record<ProviderKey, {
   description: string;
 }> = {
   claude: {
-    name: "Claude",
+    name: "Claude Code",
     services: ["claude"],
     color: "orange",
-    description: "Anthropic's AI assistant",
+    description: "Anthropic's Claude Code limits",
   },
   codex: {
     name: "Codex",
@@ -47,68 +47,24 @@ export type ServiceStatus = {
   details?: string;
 };
 
-// Claude: Peak 5AM-11AM PT weekdays — reduced 5-hour session limits during peak
-// Weekly limits unchanged. Off-peak = normal session limits.
+// Claude Code: Anthropic removed peak-hour limit reductions for Pro/Max accounts.
+// This does not describe regular Claude chat or API limits.
 export function getClaudeStatus(now: Date): ServiceStatus {
-  // PT is currently PDT (UTC-7) in late March 2026
-  const ptOffset = -7;
-  const ptTime = new Date(now.getTime() + ptOffset * 60 * 60 * 1000);
-  const ptHour = ptTime.getUTCHours();
-  const ptDay = ptTime.getUTCDay(); // 0=Sun, 6=Sat
-
-  const isWeekday = ptDay >= 1 && ptDay <= 5;
-  const isPeak = isWeekday && ptHour >= 5 && ptHour < 11;
-
-  // Calculate next change
-  let nextChangeAt: Date;
-  if (isPeak) {
-    // Peak ends at 11:00 PT
-    const nextOff = new Date(ptTime);
-    nextOff.setUTCHours(11, 0, 0, 0);
-    nextChangeAt = new Date(nextOff.getTime() - ptOffset * 60 * 60 * 1000);
-  } else if (isWeekday && ptHour < 5) {
-    // Before peak starts today
-    const nextPeak = new Date(ptTime);
-    nextPeak.setUTCHours(5, 0, 0, 0);
-    nextChangeAt = new Date(nextPeak.getTime() - ptOffset * 60 * 60 * 1000);
-  } else if (isWeekday && ptHour >= 11) {
-    // After peak, next peak is tomorrow (or Monday if Friday)
-    const nextPeak = new Date(ptTime);
-    if (ptDay === 5) {
-      // Friday -> Monday
-      nextPeak.setUTCDate(nextPeak.getUTCDate() + 3);
-    } else {
-      nextPeak.setUTCDate(nextPeak.getUTCDate() + 1);
-    }
-    nextPeak.setUTCHours(5, 0, 0, 0);
-    nextChangeAt = new Date(nextPeak.getTime() - ptOffset * 60 * 60 * 1000);
-  } else {
-    // Weekend — next peak is Monday 5 AM PT
-    const daysUntilMonday = ptDay === 0 ? 1 : 8 - ptDay;
-    const nextPeak = new Date(ptTime);
-    nextPeak.setUTCDate(nextPeak.getUTCDate() + daysUntilMonday);
-    nextPeak.setUTCHours(5, 0, 0, 0);
-    nextChangeAt = new Date(nextPeak.getTime() - ptOffset * 60 * 60 * 1000);
-  }
-
-  const peakStartLocal = formatHourInLocal(5, ptOffset, now);
-  const peakEndLocal = formatHourInLocal(11, ptOffset, now);
+  void now;
 
   return {
-    name: "Claude",
-    multiplier: isPeak ? "↓" : "1×",
-    isBonus: !isPeak,
-    statusLabel: isPeak ? "Peak — Reduced Limits" : "Off-Peak — Normal Limits",
-    statusColor: isPeak ? "red" : "green",
-    nextChangeAt,
-    nextChangeLabel: isPeak ? "Off-peak starts in" : "Peak starts in",
+    name: "Claude Code",
+    multiplier: "1×",
+    isBonus: true,
+    statusLabel: "No Peak Reduction",
+    statusColor: "green",
+    nextChangeAt: null,
+    nextChangeLabel: "",
     promotionEnd: new Date("2099-12-31"),
     promotionExpired: false,
-    peakHoursLocal: `${peakStartLocal} – ${peakEndLocal} (weekdays)`,
-    description: isPeak
-      ? "Peak hours active — 5-hour session limits are reduced. Weekly limits unchanged."
-      : "Off-peak — normal 5-hour session limits. Weekly limits unchanged.",
-    details: "Anthropic's Claude. Peak hours: 5AM-11AM PT weekdays. During peak, 5-hour session limits are lower than normal. Off-peak gets normal session limits. Weekly limits remain the same.",
+    peakHoursLocal: "None — removed for Claude Code Pro/Max",
+    description: "Claude Code no longer has reduced five-hour limits during peak hours for Pro and Max accounts.",
+    details: "Claude Code only. Anthropic removed peak-hour limit reductions for Pro and Max accounts on May 6, 2026; Claude chat and API limits may differ.",
   };
 }
 

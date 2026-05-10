@@ -130,7 +130,17 @@ export function Timeline({
   );
 }
 
-export function CodexTimeline({ currentHour }: { currentHour: number }) {
+export function AlwaysActiveTimeline({
+  currentHour,
+  label = "Codex Peak Hours",
+  markerLabel = "(2x)",
+  footer = "24/7 active - no peak hours",
+}: {
+  currentHour: number;
+  label?: string;
+  markerLabel?: string;
+  footer?: string;
+}) {
   const [hoveredHour, setHoveredHour] = useState<number | null>(null);
   const [tooltipX, setTooltipX] = useState(0);
 
@@ -160,7 +170,7 @@ export function CodexTimeline({ currentHour }: { currentHour: number }) {
 
   return (
     <div className="mb-3">
-      <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">Codex Peak Hours</p>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">{label}</p>
       <div className="relative pt-7">
         {hoveredHour !== null && (
           <div
@@ -168,7 +178,7 @@ export function CodexTimeline({ currentHour }: { currentHour: number }) {
             style={{ left: tooltipX }}
           >
             {hoveredHour.toString().padStart(2, "0")}:00
-            <span className="ml-1 text-emerald-400">(2x)</span>
+            <span className="ml-1 text-emerald-400">{markerLabel}</span>
           </div>
         )}
         <div 
@@ -186,7 +196,7 @@ export function CodexTimeline({ currentHour }: { currentHour: number }) {
           />
         </div>
       </div>
-      <p className="text-[9px] text-zinc-400 dark:text-zinc-500 mt-1.5">24/7 active - no peak hours</p>
+      <p className="text-[9px] text-zinc-400 dark:text-zinc-500 mt-1.5">{footer}</p>
     </div>
   );
 }

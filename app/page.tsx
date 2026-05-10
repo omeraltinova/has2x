@@ -18,7 +18,7 @@ import {
 } from "@/lib/services";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import { AnimatedHeader } from "@/app/components/AnimatedHeader";
-import { Timeline, CodexTimeline } from "@/app/components/Timeline";
+import { Timeline, AlwaysActiveTimeline } from "@/app/components/Timeline";
 import { BestTimeCard } from "@/app/components/BestTimeCard";
 import { StatusCard } from "@/app/components/StatusCard";
 import { WidgetCard } from "@/app/components/WidgetCard";
@@ -177,7 +177,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
 
   return (
     <div 
-      className={`min-h-screen px-4 py-8 sm:px-6 lg:px-8 relative overflow-hidden ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}
+      className={`min-h-screen px-3 py-8 sm:px-4 md:px-6 lg:px-8 xl:px-10 relative overflow-hidden ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}
       onMouseMove={handleMouseMove}
     >
       <button
@@ -201,7 +201,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
           background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(16, 185, 129, 0.06), transparent 40%)`,
         }}
       />
-      <div className="mx-auto max-w-7xl relative z-10">
+      <div className="mx-auto max-w-[1600px] relative z-10">
         <header className="mb-10 text-center">
           <AnimatedHeader />
           <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400">
@@ -238,22 +238,43 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
           </div>
         )}
 
-        <div className="flex flex-wrap justify-center gap-6 items-stretch">
-          {visibleServices.includes("claude") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_120px)/6)] lg:flex-shrink-0 flex"><StatusCard status={statuses.claude} /></div>}
-          {visibleServices.includes("codex") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_120px)/6)] lg:flex-shrink-0 flex"><StatusCard status={statuses.gpt} /></div>}
-          {visibleServices.includes("glm51") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_120px)/6)] lg:flex-shrink-0 flex"><StatusCard status={statuses.glm51} /></div>}
-          {visibleServices.includes("glm5") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_120px)/6)] lg:flex-shrink-0 flex"><StatusCard status={statuses.glm5} /></div>}
-          {visibleServices.includes("glm5Turbo") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_120px)/6)] lg:flex-shrink-0 flex"><StatusCard status={statuses.glm5Turbo} /></div>}
-          {visibleServices.includes("xiaomi") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_120px)/6)] lg:flex-shrink-0 flex"><StatusCard status={statuses.xiaomi} /></div>}
-        </div>
-
-        <div className="mt-8 flex flex-wrap justify-center gap-6">
-          {visibleServices.includes("claude") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_120px)/6)] lg:flex-shrink-0"><Timeline peakRanges={getPeakRangesLocal(5, 11, -7, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="Claude Peak Hours" /></div>}
-          {visibleServices.includes("codex") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_120px)/6)] lg:flex-shrink-0"><CodexTimeline currentHour={getCurrentLocalHour(new Date())} /></div>}
-          {visibleServices.includes("glm51") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_120px)/6)] lg:flex-shrink-0"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5.1 Peak Hours" /></div>}
-          {visibleServices.includes("glm5") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_120px)/6)] lg:flex-shrink-0"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5 Peak Hours" /></div>}
-          {visibleServices.includes("glm5Turbo") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_120px)/6)] lg:flex-shrink-0"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5-Turbo Peak Hours" /></div>}
-          {visibleServices.includes("xiaomi") && <div className="w-full md:w-[calc(50%-12px)] lg:w-[calc((100%_-_120px)/6)] lg:flex-shrink-0"><Timeline peakRanges={getPeakRangesLocal(16, 24, 0, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="green" label="Xiaomi Bonus Hours" /></div>}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
+          {visibleServices.includes("claude") && (
+            <div className="flex flex-col">
+              <div className="flex flex-1"><StatusCard status={statuses.claude} /></div>
+              <div className="mt-4"><AlwaysActiveTimeline currentHour={getCurrentLocalHour(new Date())} label="Claude Code Limit Window" markerLabel="(normal)" footer="No peak-hour reduction for Claude Code Pro/Max" /></div>
+            </div>
+          )}
+          {visibleServices.includes("codex") && (
+            <div className="flex flex-col">
+              <div className="flex flex-1"><StatusCard status={statuses.gpt} /></div>
+              <div className="mt-4"><AlwaysActiveTimeline currentHour={getCurrentLocalHour(new Date())} /></div>
+            </div>
+          )}
+          {visibleServices.includes("glm51") && (
+            <div className="flex flex-col">
+              <div className="flex flex-1"><StatusCard status={statuses.glm51} /></div>
+              <div className="mt-4"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5.1 Peak Hours" /></div>
+            </div>
+          )}
+          {visibleServices.includes("glm5") && (
+            <div className="flex flex-col">
+              <div className="flex flex-1"><StatusCard status={statuses.glm5} /></div>
+              <div className="mt-4"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5 Peak Hours" /></div>
+            </div>
+          )}
+          {visibleServices.includes("glm5Turbo") && (
+            <div className="flex flex-col">
+              <div className="flex flex-1"><StatusCard status={statuses.glm5Turbo} /></div>
+              <div className="mt-4"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5-Turbo Peak Hours" /></div>
+            </div>
+          )}
+          {visibleServices.includes("xiaomi") && (
+            <div className="flex flex-col">
+              <div className="flex flex-1"><StatusCard status={statuses.xiaomi} /></div>
+              <div className="mt-4"><Timeline peakRanges={getPeakRangesLocal(16, 24, 0, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="green" label="Xiaomi Bonus Hours" /></div>
+            </div>
+          )}
         </div>
 
         <footer className="mt-12 text-center text-xs text-zinc-500">
@@ -287,7 +308,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                     <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Best Time to Use</span>
                   </label>
                   {[
-                    { key: "claude" as const, label: "Claude" },
+                    { key: "claude" as const, label: "Claude Code" },
                     { key: "codex" as const, label: "Codex" },
                     { key: "glm51" as const, label: "GLM-5.1" },
                     { key: "glm5" as const, label: "GLM-5" },
@@ -358,7 +379,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                   <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Select Services:</p>
                   <div className="flex flex-wrap gap-2">
                     {[
-                      { key: "claude" as const, label: "Claude" },
+                      { key: "claude" as const, label: "Claude Code" },
                       { key: "codex" as const, label: "Codex" },
                       { key: "glm51" as const, label: "GLM-5.1" },
                       { key: "glm5" as const, label: "GLM-5" },
@@ -429,7 +450,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
               {/* Right Side - Preview */}
               <div className="w-full md:w-1/2 bg-zinc-50 dark:bg-zinc-950 p-6">
                 <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
-                  Live Preview ({widgetWidth} × {widgetHeight}):
+                  Live Preview ({widgetWidth} Ã— {widgetHeight}):
                 </p>
                 <div className="rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 mx-auto" style={{ width: widgetWidth.includes('px') ? widgetWidth : '100%', height: widgetHeight.includes('%') || widgetHeight === 'auto' ? widgetHeight : `${widgetHeight}px`, maxWidth: '100%' }}>
                   {typeof window !== "undefined" && (

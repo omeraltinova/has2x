@@ -15,7 +15,7 @@ import {
   type ServiceStatus,
 } from "@/lib/services";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
-import { Timeline, CodexTimeline } from "@/app/components/Timeline";
+import { Timeline, AlwaysActiveTimeline } from "@/app/components/Timeline";
 import { StatusCard } from "@/app/components/StatusCard";
 
 const PROVIDER_COLORS: Record<string, { bg: string; border: string; text: string; hoverBg: string }> = {
@@ -240,12 +240,12 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
         }`}>
           {providerServices.includes("claude") && (
             <div className="w-full">
-              <Timeline peakRanges={getPeakRangesLocal(5, 11, -7, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="Claude Peak Hours" />
+              <AlwaysActiveTimeline currentHour={getCurrentLocalHour(new Date())} label="Claude Code Limit Window" markerLabel="(normal)" footer="No peak-hour reduction for Claude Code Pro/Max" />
             </div>
           )}
           {providerServices.includes("codex") && (
             <div className="w-full">
-              <CodexTimeline currentHour={getCurrentLocalHour(new Date())} />
+              <AlwaysActiveTimeline currentHour={getCurrentLocalHour(new Date())} />
             </div>
           )}
           {providerServices.includes("glm51") && (

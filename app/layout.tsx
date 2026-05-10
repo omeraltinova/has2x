@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://has2x.vercel.app"),
   title: "has2x — AI Usage Multiplier Tracker",
   description:
-    "Track real-time 2x usage multiplier status for Claude, Codex, and GLM based on your timezone.",
+    "Track real-time 2x usage multiplier status for Claude Code, Codex, and GLM based on your timezone.",
 };
 
 export default function RootLayout({
