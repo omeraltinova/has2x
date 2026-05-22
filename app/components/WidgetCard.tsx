@@ -26,11 +26,11 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
 
   const colorStyles = {
     green: {
-      bg: "bg-emerald-500/10 dark:bg-emerald-500/5",
-      border: "border-emerald-500/30 hover:border-emerald-500/50",
-      text: "text-emerald-700 dark:text-emerald-400",
-      dot: "bg-emerald-500",
-      icon: "text-emerald-600 dark:text-emerald-500",
+      bg: "bg-accent/10 dark:bg-accent/5",
+      border: "border-accent/30 hover:border-accent/50",
+      text: "text-accent-text",
+      dot: "bg-accent",
+      icon: "text-accent-text",
     },
     red: {
       bg: "bg-red-500/10 dark:bg-red-500/5",

@@ -4,27 +4,67 @@ import { useState, useEffect } from "react";
 import { safeGetItem } from "@/lib/safeGetItem";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 
-function resolveInitialTheme(): "dark" | "light" {
-  const saved = safeGetItem<string | null>("theme", null);
-  if (saved === "dark" || saved === "light") return saved;
+export type ThemeMode = "light" | "dark";
+export type ThemePalette = "emerald" | "sunset" | "ocean" | "cyberpunk";
+
+function resolveInitialMode(): ThemeMode {
+  const savedMode = safeGetItem<ThemeMode | null>("theme-mode", null);
+  if (savedMode === "dark" || savedMode === "light") return savedMode;
+  
+  const legacyTheme = safeGetItem<string | null>("theme", null);
+  if (legacyTheme === "dark" || legacyTheme === "light") return legacyTheme;
+  
   return "dark";
 }
 
+function resolveInitialPalette(): ThemePalette {
+  const savedPalette = safeGetItem<ThemePalette | null>("theme-palette", null);
+  if (
+    savedPalette === "emerald" ||
+    savedPalette === "sunset" ||
+    savedPalette === "ocean" ||
+    savedPalette === "cyberpunk"
+  ) {
+    return savedPalette;
+  }
+  return "emerald";
+}
+
 export function useTheme() {
-  const [theme, setTheme] = useState<"dark" | "light">(resolveInitialTheme);
+  const [themeMode, setThemeMode] = useState<ThemeMode>(resolveInitialMode);
+  const [themePalette, setThemePalette] = useState<ThemePalette>(resolveInitialPalette);
   const isHydrated = useHasHydrated();
 
   useEffect(() => {
     if (!isHydrated) return;
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [isHydrated, theme]);
+    document.documentElement.classList.toggle("dark", themeMode === "dark");
+    document.documentElement.setAttribute("data-theme", themePalette);
+  }, [isHydrated, themeMode, themePalette]);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    localStorage.setItem("theme", JSON.stringify(newTheme));
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
+  const setMode = (mode: ThemeMode) => {
+    setThemeMode(mode);
+    localStorage.setItem("theme-mode", JSON.stringify(mode));
+    localStorage.setItem("theme", JSON.stringify(mode));
+    document.documentElement.classList.toggle("dark", mode === "dark");
   };
 
-  return { theme, toggleTheme };
+  const setPalette = (palette: ThemePalette) => {
+    setThemePalette(palette);
+    localStorage.setItem("theme-palette", JSON.stringify(palette));
+    document.documentElement.setAttribute("data-theme", palette);
+  };
+
+  const toggleTheme = () => {
+    const newMode = themeMode === "dark" ? "light" : "dark";
+    setMode(newMode);
+  };
+
+  return {
+    theme: themeMode,
+    themeMode,
+    themePalette,
+    setMode,
+    setPalette,
+    toggleTheme,
+  };
 }

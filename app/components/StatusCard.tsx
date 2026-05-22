@@ -28,28 +28,28 @@ export function StatusCard({ status }: { status: ServiceStatus }) {
   }, [isHydrated, status.nextChangeAt]);
 
   const bgColor = {
-    green: "border-emerald-500/40 bg-emerald-500/5",
+    green: "border-accent/40 bg-accent/5",
     red: "border-red-500/40 bg-red-500/5",
     orange: "border-amber-500/40 bg-amber-500/5",
     gray: "border-zinc-500/40 bg-zinc-500/5",
   }[status.statusColor];
 
   const badgeColor = {
-    green: "bg-emerald-500 text-white",
+    green: "bg-accent text-white",
     red: "bg-red-500 text-white",
     orange: "bg-amber-500 text-white",
     gray: "bg-zinc-500 text-white",
   }[status.statusColor];
 
   const glowColor = {
-    green: "shadow-emerald-500/20",
+    green: "shadow-accent/20",
     red: "shadow-red-500/20",
     orange: "shadow-amber-500/20",
     gray: "shadow-zinc-500/10",
   }[status.statusColor];
 
   const multiplierColor = {
-    green: "text-emerald-600 dark:text-emerald-400",
+    green: "text-accent-text",
     red: "text-red-600 dark:text-red-400",
     orange: "text-amber-600 dark:text-amber-400",
     gray: "text-zinc-500",

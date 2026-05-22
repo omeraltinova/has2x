@@ -4,6 +4,7 @@ import { useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 import { useTheme } from "@/lib/useTheme";
+import { ThemeSelector } from "@/app/components/ThemeSelector";
 import { useStatuses } from "@/lib/useStatuses";
 import {
   getPeakRangesLocal,
@@ -24,10 +25,10 @@ const PROVIDER_COLORS: Record<string, { bg: string; border: string; text: string
     hoverBg: "hover:bg-orange-500/10",
   },
   green: {
-    bg: "bg-emerald-500/10 dark:bg-emerald-500/5",
-    border: "border-emerald-500/30 hover:border-emerald-500/50",
-    text: "text-emerald-600 dark:text-emerald-400",
-    hoverBg: "hover:bg-emerald-500/10",
+    bg: "bg-accent/10 dark:bg-accent/5",
+    border: "border-accent/30 hover:border-accent/50",
+    text: "text-accent-text",
+    hoverBg: "hover:bg-accent/10",
   },
   cyan: {
     bg: "bg-cyan-500/10 dark:bg-cyan-500/5",
@@ -48,7 +49,7 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const statuses = useStatuses();
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const isHydrated = useHasHydrated();
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -58,7 +59,7 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
   if (!isHydrated || !statuses) {
     return (
       <div className={`flex min-h-screen items-center justify-center ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}>
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-emerald-500" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-accent-text" />
         <div
           className="pointer-events-none fixed inset-0 z-0"
           style={{
@@ -85,25 +86,11 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
       className={`min-h-screen px-4 py-8 sm:px-6 lg:px-8 relative overflow-hidden ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}
       onMouseMove={handleMouseMove}
     >
-      <button
-        onClick={toggleTheme}
-        className="fixed top-4 right-4 z-50 p-2 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
-        aria-label="Toggle theme"
-      >
-        {theme === "dark" ? (
-          <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-        ) : (
-          <svg className="w-5 h-5 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-          </svg>
-        )}
-      </button>
+      <ThemeSelector />
       <div
         className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
         style={{
-          background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(16, 185, 129, 0.06), transparent 40%)`,
+          background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, var(--accent-glow), transparent 40%)`,
         }}
       />
       <div className="mx-auto max-w-5xl relative z-10">
@@ -122,7 +109,7 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
               <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-5xl">
                 has
                 <span className={`ml-1 ${colors.text}`}>{provider.name}</span>
-                <span className="text-emerald-500">2x<span className="text-zinc-400">?</span></span>
+                <span className="text-accent-text">2x<span className="text-zinc-400">?</span></span>
               </h1>
             </div>
             <p className="text-lg text-zinc-600 dark:text-zinc-400">
@@ -215,7 +202,7 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
                 href="https://www.omeraltinova.com.tr/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-emerald-500 hover:text-emerald-400 transition-colors"
+                className="text-accent-text hover:text-accent transition-colors"
               >
                 Faruk
               </a>
@@ -236,7 +223,7 @@ function ProviderPageInner({ providerKey }: { providerKey: ProviderKey }) {
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">The provider &quot;{providerKey}&quot; does not exist.</p>
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent/15 border border-accent/30 text-accent-text hover:bg-accent/25 transition-colors font-medium"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -257,7 +244,7 @@ export function ProviderPageClient({ providerKey }: { providerKey: ProviderKey }
       <Suspense
         fallback={
           <div className="flex min-h-screen items-center justify-center dark-grid-bg">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-emerald-500" />
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-accent-text" />
           </div>
         }
       >

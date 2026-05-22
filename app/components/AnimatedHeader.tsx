@@ -48,7 +48,7 @@ export function AnimatedHeader() {
             {SERVICES[activeIndex].name}
           </span>
         </span>
-        <span className="text-emerald-500">2x<span className="text-zinc-400">?</span></span>
+        <span className="text-accent-text">2x<span className="text-zinc-400">?</span></span>
       </h1>
     </div>
   );

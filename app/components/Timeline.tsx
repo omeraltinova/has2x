@@ -29,12 +29,12 @@ export function Timeline({
 
     let rgba: string;
     if (peakIsBonus) {
-      rgba = isInPeak ? "rgba(16, 185, 129, 0.5)" : "rgba(239, 68, 68, 0.5)";
+      rgba = isInPeak ? "color-mix(in srgb, var(--accent) 50%, transparent)" : "rgba(239, 68, 68, 0.5)";
     } else if (isInPeak) {
       const color = serviceColor === "red" ? "239, 68, 68" : "245, 158, 11";
       rgba = `rgba(${color}, 0.5)`;
     } else {
-      rgba = "rgba(16, 185, 129, 0.4)";
+      rgba = "color-mix(in srgb, var(--accent) 40%, transparent)";
     }
     gradientStops.push(`${rgba} ${pct}%`);
     gradientStops.push(`${rgba} ${nextPct}%`);
@@ -82,11 +82,11 @@ export function Timeline({
               className={`ml-1 ${
                 peakIsBonus
                   ? isHoveredPeak
-                    ? "text-emerald-400"
+                    ? "text-accent-text"
                     : "text-red-400"
                   : isHoveredPeak
                     ? "text-red-400"
-                    : "text-emerald-400"
+                    : "text-accent-text"
               }`}
             >
               {peakIsBonus
@@ -178,7 +178,7 @@ export function AlwaysActiveTimeline({
             style={{ left: tooltipX }}
           >
             {hoveredHour.toString().padStart(2, "0")}:00
-            <span className="ml-1 text-emerald-400">{markerLabel}</span>
+            <span className="ml-1 text-accent-text">{markerLabel}</span>
           </div>
         )}
         <div 
@@ -189,7 +189,7 @@ export function AlwaysActiveTimeline({
           onTouchMove={handleTouchMove}
           onTouchEnd={() => setHoveredHour(null)}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/50 via-emerald-400/40 to-emerald-500/50" />
+          <div className="absolute inset-0 bg-gradient-to-r from-accent/50 via-accent/40 to-accent/50" />
           <div
             className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-lg shadow-white/50 z-10"
             style={{ left: `calc(${currentPct}% - 3px)` }}

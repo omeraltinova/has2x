@@ -7,7 +7,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     <>
       <script
         dangerouslySetInnerHTML={{
-          __html: `!function(){try{var t=localStorage.getItem("theme");if(t){var p=JSON.parse(t);document.documentElement.classList.toggle("dark","dark"===p)}else document.documentElement.classList.add("dark")}catch(e){document.documentElement.classList.add("dark")}}();`,
+          __html: `!function(){try{var m=localStorage.getItem("theme-mode"),p=localStorage.getItem("theme-palette"),o=localStorage.getItem("theme");if(o&&!m)try{var v=JSON.parse(o);("dark"===v||"light"===v)&&(m=JSON.stringify(v))}catch(e){}var d=m?JSON.parse(m):"dark",a=p?JSON.parse(p):"emerald";document.documentElement.classList.toggle("dark","dark"===d),document.documentElement.setAttribute("data-theme",a)}catch(e){document.documentElement.classList.add("dark"),document.documentElement.setAttribute("data-theme","emerald")}}();`,
         }}
       />
       {children}

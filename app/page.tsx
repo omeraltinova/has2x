@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 import { useTheme } from "@/lib/useTheme";
+import { ThemeSelector } from "@/app/components/ThemeSelector";
 import { useStatuses } from "@/lib/useStatuses";
 import { safeGetItem } from "@/lib/safeGetItem";
 import {
@@ -100,7 +101,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
   if (!isHydrated || !statuses) {
     return (
       <div className={`flex min-h-screen items-center justify-center ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}>
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-emerald-500" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-accent-text" />
         <div
           className="pointer-events-none fixed inset-0 z-0"
           style={{
@@ -131,25 +132,11 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
       className={`min-h-screen px-3 py-8 sm:px-4 md:px-6 lg:px-8 xl:px-10 relative overflow-hidden ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}
       onMouseMove={handleMouseMove}
     >
-      <button
-        onClick={toggleTheme}
-        className="fixed top-4 right-4 z-50 p-2 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
-        aria-label="Toggle theme"
-      >
-        {theme === "dark" ? (
-          <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-        ) : (
-          <svg className="w-5 h-5 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-          </svg>
-        )}
-      </button>
+      <ThemeSelector />
       <div
         className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
         style={{
-          background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(16, 185, 129, 0.06), transparent 40%)`,
+          background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, var(--accent-glow), transparent 40%)`,
         }}
       />
       <div className="mx-auto max-w-[1600px] relative z-10">
@@ -165,7 +152,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
             {(Object.entries(PROVIDERS) as [ProviderKey, typeof PROVIDERS[ProviderKey]][]).map(([key, p]) => {
               const colorMap: Record<string, { bg: string; border: string; text: string }> = {
                 orange: { bg: "bg-orange-500/10 dark:bg-orange-500/5", border: "border-orange-500/30 hover:border-orange-500/50", text: "text-orange-600 dark:text-orange-400" },
-                green: { bg: "bg-emerald-500/10 dark:bg-emerald-500/5", border: "border-emerald-500/30 hover:border-emerald-500/50", text: "text-emerald-600 dark:text-emerald-400" },
+                green: { bg: "bg-accent/10 dark:bg-accent/5", border: "border-accent/30 hover:border-accent/50", text: "text-accent-text" },
                 cyan: { bg: "bg-cyan-500/10 dark:bg-cyan-500/5", border: "border-cyan-500/30 hover:border-cyan-500/50", text: "text-cyan-600 dark:text-cyan-400" },
                 yellow: { bg: "bg-yellow-500/10 dark:bg-yellow-500/5", border: "border-yellow-500/30 hover:border-yellow-500/50", text: "text-yellow-600 dark:text-yellow-400" },
               };
@@ -238,7 +225,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                 onClick={() => setShowFilterMenu(!showFilterMenu)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors ${
                   visibleServices.length < 6 || !showBestTime
-                    ? 'bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                    ? 'bg-accent/15 border border-accent/30 text-accent-text'
                     : 'bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
                 }`}
               >
@@ -254,9 +241,9 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                       type="checkbox"
                       checked={showBestTime}
                       onChange={() => setShowBestTime(!showBestTime)}
-                      className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-emerald-500 focus:ring-emerald-500"
+                      className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-accent focus:ring-accent"
                     />
-                    <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Best Time to Use</span>
+                    <span className="text-sm font-medium text-accent-text">Best Time to Use</span>
                   </label>
                   {[
                     { key: "claude" as const, label: "Claude Code" },
@@ -274,7 +261,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                         type="checkbox"
                         checked={visibleServices.includes(service.key)}
                         onChange={() => toggleService(service.key)}
-                        className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-emerald-500 focus:ring-emerald-500"
+                        className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-accent focus:ring-accent"
                       />
                       <span className="text-sm text-zinc-700 dark:text-zinc-300">{service.label}</span>
                     </label>
@@ -287,7 +274,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                 setWidgetPreviewServices(visibleServices);
                 setShowWidgetModal(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/15 border border-accent/30 text-accent-text hover:bg-accent/25 transition-colors cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
@@ -299,7 +286,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                 href="https://www.omeraltinova.com.tr/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-emerald-500 hover:text-emerald-400 transition-colors"
+                className="text-accent-text hover:text-accent transition-colors"
               >
                 Faruk
               </a>
@@ -351,14 +338,14 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                                 : [...prev, service.key]
                             );
                           }}
-                          className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-emerald-500 focus:ring-emerald-500"
+                          className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-accent focus:ring-accent"
                         />
                         <span className="text-sm text-zinc-700 dark:text-zinc-300">{service.label}</span>
                       </label>
                     ))}
                   </div>
                 </div>
-
+ 
                 {/* Size Controls */}
                 <div className="mb-4 grid grid-cols-2 gap-4">
                   <div>
@@ -368,7 +355,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                       value={widgetWidth}
                       onChange={(e) => setWidgetWidth(e.target.value)}
                       placeholder="100% or 800px"
-                      className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-accent"
                     />
                   </div>
                   <div>
@@ -378,7 +365,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                       value={widgetHeight}
                       onChange={(e) => setWidgetHeight(e.target.value)}
                       placeholder="400px or 100%"
-                      className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-accent"
                     />
                   </div>
                 </div>
@@ -444,7 +431,7 @@ export default function Home() {
     <ErrorBoundary>
       <Suspense fallback={
         <div className="flex min-h-screen items-center justify-center dark-grid-bg">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-emerald-500" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-accent-text" />
         </div>
       }>
         <HomeWithParams />

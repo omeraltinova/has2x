@@ -2,51 +2,148 @@
 
 @variant dark (&:where(.dark, .dark *));
 
-:root {
+:root, [data-theme="emerald"] {
   --background: #f8f9fa;
   --foreground: #1a1a2e;
   --card-bg: #ffffff;
   --card-border: rgba(0, 0, 0, 0.08);
   --muted: #6b7280;
   --muted-foreground: #9ca3af;
+  --accent: #10b981;
+  --accent-text: #059669;
+  --accent-hover: #047857;
+  --accent-glow: rgba(16, 185, 129, 0.06);
+  --grid-line: rgba(16, 185, 129, 0.04);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-.dark {
+.dark, .dark[data-theme="emerald"] {
   --background: #0f0f12;
   --foreground: #ededed;
   --card-bg: #1a1a1f;
   --card-border: rgba(255, 255, 255, 0.1);
   --muted: #a1a1aa;
   --muted-foreground: #71717a;
+  --accent: #10b981;
+  --accent-text: #34d399;
+  --accent-hover: #6ee7b7;
+  --accent-glow: rgba(16, 185, 129, 0.06);
+  --grid-line: rgba(16, 185, 129, 0.03);
+}
+
+/* Sunset Theme (Rose/Coral Accent) */
+[data-theme="sunset"] {
+  --background: #fffafb;
+  --foreground: #3e1b24;
+  --card-bg: #ffffff;
+  --card-border: rgba(225, 29, 72, 0.08);
+  --muted: #881337;
+  --muted-foreground: #fda4af;
+  --accent: #f43f5e;
+  --accent-text: #e11d48;
+  --accent-hover: #be123c;
+  --accent-glow: rgba(244, 63, 94, 0.06);
+  --grid-line: rgba(244, 63, 94, 0.04);
+}
+
+.dark[data-theme="sunset"] {
+  --background: #140d0f;
+  --foreground: #fdeef1;
+  --card-bg: #1f1418;
+  --card-border: rgba(225, 29, 72, 0.15);
+  --muted: #fda4af;
+  --muted-foreground: #f43f5e;
+  --accent: #f43f5e;
+  --accent-text: #fb7185;
+  --accent-hover: #fecdd3;
+  --accent-glow: rgba(244, 63, 94, 0.06);
+  --grid-line: rgba(244, 63, 94, 0.03);
+}
+
+/* Ocean Theme (Blue/Navy Accent) */
+[data-theme="ocean"] {
+  --background: #f0f7ff;
+  --foreground: #0f2d59;
+  --card-bg: #ffffff;
+  --card-border: rgba(59, 130, 246, 0.08);
+  --muted: #1e3a8a;
+  --muted-foreground: #93c5fd;
+  --accent: #2563eb;
+  --accent-text: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-glow: rgba(59, 130, 246, 0.06);
+  --grid-line: rgba(59, 130, 246, 0.04);
+}
+
+.dark[data-theme="ocean"] {
+  --background: #0b132b;
+  --foreground: #e0f2fe;
+  --card-bg: #111e42;
+  --card-border: rgba(59, 130, 246, 0.15);
+  --muted: #93c5fd;
+  --muted-foreground: #3b82f6;
+  --accent: #3b82f6;
+  --accent-text: #60a5fa;
+  --accent-hover: #93c5fd;
+  --accent-glow: rgba(59, 130, 246, 0.06);
+  --grid-line: rgba(59, 130, 246, 0.03);
+}
+
+/* Cyberpunk Theme (Purple/Fuchsia Accent) */
+[data-theme="cyberpunk"] {
+  --background: #faf5ff;
+  --foreground: #3b0764;
+  --card-bg: #ffffff;
+  --card-border: rgba(168, 85, 247, 0.08);
+  --muted: #581c87;
+  --muted-foreground: #d8b4fe;
+  --accent: #9333ea;
+  --accent-text: #9333ea;
+  --accent-hover: #7e22ce;
+  --accent-glow: rgba(147, 51, 234, 0.06);
+  --grid-line: rgba(147, 51, 234, 0.04);
+}
+
+.dark[data-theme="cyberpunk"] {
+  --background: #090312;
+  --foreground: #f5f3ff;
+  --card-bg: #150a29;
+  --card-border: rgba(168, 85, 247, 0.15);
+  --muted: #d8b4fe;
+  --muted-foreground: #a855f7;
+  --accent: #a855f7;
+  --accent-text: #c084fc;
+  --accent-hover: #e9d5ff;
+  --accent-glow: rgba(168, 85, 247, 0.06);
+  --grid-line: rgba(168, 85, 247, 0.03);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --color-accent-hover: var(--accent-hover);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.light-grid-bg {
-  background-color: #f0f1f3;
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-
+.light-grid-bg,
 .dark-grid-bg {
-  background-color: #0f0f12;
+  background-color: var(--background);
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 60px 60px;
+  transition: background-color 0.3s ease, background-image 0.3s ease;
 }
 
 .light-grid-bg .status-card,
