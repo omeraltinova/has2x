@@ -69,6 +69,8 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
         return <Bot className={`w-5 h-5 ${colorStyles.icon}`} />;
       case "Codex":
         return <MessageSquare className={`w-5 h-5 ${colorStyles.icon}`} />;
+      case "GLM-5":
+        return <Cpu className={`w-5 h-5 ${colorStyles.icon}`} />;
       case "GLM-5.1":
         return <Sparkles className={`w-5 h-5 ${colorStyles.icon}`} />;
       case "GLM-5-Turbo":

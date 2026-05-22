@@ -1,20 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useHasHydrated } from "@/lib/useHasHydrated";
+import { useTheme } from "@/lib/useTheme";
+import { useStatuses } from "@/lib/useStatuses";
+import { safeGetItem } from "@/lib/safeGetItem";
 import {
-  getClaudeStatus,
-  getGPTStatus,
-  getGLMStatus,
-  getXiaomiStatus,
   getPeakRangesLocal,
   getCurrentLocalHour,
   getBestTimeRecommendation,
   PROVIDERS,
   type ProviderKey,
-  type ServiceStatus,
 } from "@/lib/services";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import { AnimatedHeader } from "@/app/components/AnimatedHeader";
@@ -26,29 +24,17 @@ import { WidgetCard } from "@/app/components/WidgetCard";
 const ALL_SERVICES = ["claude", "codex", "glm51", "glm5", "glm5Turbo", "xiaomi"] as const;
 type ServiceKey = typeof ALL_SERVICES[number];
 
-function safeGetItem<T>(key: string, fallback: T): T {
-  try {
-    const value = localStorage.getItem(key);
-    if (value === null) return fallback;
-    return JSON.parse(value) as T;
-  } catch {
-    return fallback;
-  }
-}
-
 function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initialServices: ServiceKey[] }) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [statuses, setStatuses] = useState<{
-    claude: ServiceStatus;
-    gpt: ServiceStatus;
-    glm51: ServiceStatus;
-    glm5: ServiceStatus;
-    glm5Turbo: ServiceStatus;
-    xiaomi: ServiceStatus;
-  } | null>(null);
-  const [recommendation, setRecommendation] = useState<ReturnType<typeof getBestTimeRecommendation> | null>(null);
-  const [timezone, setTimezone] = useState("");
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const statuses = useStatuses();
+  const recommendation = useMemo(() => {
+    if (!statuses) return null;
+    return getBestTimeRecommendation(
+      statuses.claude, statuses.gpt, statuses.glm51, statuses.glm5, statuses.glm5Turbo, statuses.xiaomi
+    );
+  }, [statuses]);
+  const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
+  const { theme, toggleTheme } = useTheme();
   const [visibleServices, setVisibleServices] = useState<ServiceKey[]>(initialServices);
   const [showBestTime, setShowBestTime] = useState(true);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -60,19 +46,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
   const isHydrated = useHasHydrated();
 
   useEffect(() => {
-    let intervalId: number | null = null;
-
     const initialize = () => {
-      setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
-
-      const saved = safeGetItem<string | null>("theme", null);
-      if (saved === "dark" || saved === "light") {
-        setTheme(saved);
-        document.documentElement.classList.toggle("dark", saved === "dark");
-      } else {
-        document.documentElement.classList.add("dark");
-      }
-
       const parsedServices = safeGetItem<string[]>("visibleServices", []);
       const knownServices = safeGetItem<string[]>("knownServices", []);
       const validServices = parsedServices.filter((s): s is ServiceKey => ALL_SERVICES.includes(s as ServiceKey));
@@ -86,28 +60,12 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
       if (savedShowBestTime !== null) {
         setShowBestTime(savedShowBestTime);
       }
-
-      const update = () => {
-        const now = new Date();
-        const claude = getClaudeStatus(now);
-        const gpt = getGPTStatus(now);
-        const { glm51, glm5, glm5Turbo } = getGLMStatus(now);
-        const xiaomi = getXiaomiStatus(now);
-        setStatuses({ claude, gpt, glm51, glm5, glm5Turbo, xiaomi });
-        setRecommendation(getBestTimeRecommendation(claude, gpt, glm51, glm5, glm5Turbo, xiaomi));
-      };
-
-      update();
-      intervalId = window.setInterval(update, 30000);
     };
 
     const timeoutId = window.setTimeout(initialize, 0);
 
     return () => {
       window.clearTimeout(timeoutId);
-      if (intervalId !== null) {
-        window.clearInterval(intervalId);
-      }
     };
   }, []);
 
@@ -133,13 +91,6 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
       }
       return [...prev, service];
     });
-  };
-
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {

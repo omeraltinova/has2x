@@ -29,7 +29,7 @@ export function Timeline({
 
     let rgba: string;
     if (peakIsBonus) {
-      rgba = isInPeak ? "rgba(16, 185, 129, 0.5)" : "rgba(113, 113, 122, 0.3)";
+      rgba = isInPeak ? "rgba(16, 185, 129, 0.5)" : "rgba(239, 68, 68, 0.5)";
     } else if (isInPeak) {
       const color = serviceColor === "red" ? "239, 68, 68" : "245, 158, 11";
       rgba = `rgba(${color}, 0.5)`;
@@ -83,7 +83,7 @@ export function Timeline({
                 peakIsBonus
                   ? isHoveredPeak
                     ? "text-emerald-400"
-                    : "text-zinc-400"
+                    : "text-red-400"
                   : isHoveredPeak
                     ? "text-red-400"
                     : "text-emerald-400"

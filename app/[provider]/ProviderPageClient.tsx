@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useHasHydrated } from "@/lib/useHasHydrated";
+import { useTheme } from "@/lib/useTheme";
+import { useStatuses } from "@/lib/useStatuses";
 import {
-  getClaudeStatus,
-  getGPTStatus,
-  getGLMStatus,
-  getXiaomiStatus,
   getPeakRangesLocal,
   getCurrentLocalHour,
   PROVIDERS,
@@ -45,77 +43,16 @@ const PROVIDER_COLORS: Record<string, { bg: string; border: string; text: string
   },
 };
 
-function safeGetItem<T>(key: string, fallback: T): T {
-  try {
-    const value = localStorage.getItem(key);
-    if (value === null) return fallback;
-    return JSON.parse(value) as T;
-  } catch {
-    return fallback;
-  }
-}
-
 function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
   const provider = PROVIDERS[providerKey];
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [statuses, setStatuses] = useState<{
-    claude: ServiceStatus;
-    gpt: ServiceStatus;
-    glm51: ServiceStatus;
-    glm5: ServiceStatus;
-    glm5Turbo: ServiceStatus;
-    xiaomi: ServiceStatus;
-  } | null>(null);
-  const [timezone, setTimezone] = useState("");
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const statuses = useStatuses();
+  const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
+  const { theme, toggleTheme } = useTheme();
   const isHydrated = useHasHydrated();
-
-  useEffect(() => {
-    let intervalId: number | null = null;
-
-    const initialize = () => {
-      setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
-
-      const saved = safeGetItem<string | null>("theme", null);
-      if (saved === "dark" || saved === "light") {
-        setTheme(saved);
-        document.documentElement.classList.toggle("dark", saved === "dark");
-      } else {
-        document.documentElement.classList.add("dark");
-      }
-
-      const update = () => {
-        const now = new Date();
-        const claude = getClaudeStatus(now);
-        const gpt = getGPTStatus(now);
-        const { glm51, glm5, glm5Turbo } = getGLMStatus(now);
-        const xiaomi = getXiaomiStatus(now);
-        setStatuses({ claude, gpt, glm51, glm5, glm5Turbo, xiaomi });
-      };
-
-      update();
-      intervalId = window.setInterval(update, 30000);
-    };
-
-    const timeoutId = window.setTimeout(initialize, 0);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      if (intervalId !== null) {
-        window.clearInterval(intervalId);
-      }
-    };
-  }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     setMousePosition({ x: e.clientX, y: e.clientY });
-  };
-
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
 
   if (!isHydrated || !statuses) {

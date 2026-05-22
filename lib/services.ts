@@ -245,7 +245,7 @@ export function getXiaomiStatus(now: Date): ServiceStatus {
     multiplier: isBonus ? "0.8×" : "1×",
     isBonus,
     statusLabel: isBonus ? "Bonus — 0.8× Usage" : "Standard — 1× Usage",
-    statusColor: isBonus ? "green" : "gray",
+    statusColor: isBonus ? "green" : "red",
     nextChangeAt,
     nextChangeLabel: isBonus ? "Bonus ends in" : "Bonus starts in",
     promotionEnd: new Date("2099-12-31"),
