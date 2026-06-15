@@ -14,7 +14,6 @@ export type AllStatuses = {
   claude: ServiceStatus;
   gpt: ServiceStatus;
   glm51: ServiceStatus;
-  glm5: ServiceStatus;
   glm5Turbo: ServiceStatus;
   xiaomi: ServiceStatus;
 };
@@ -30,9 +29,9 @@ export function useStatuses() {
       const now = new Date();
       const claude = getClaudeStatus(now);
       const gpt = getGPTStatus(now);
-      const { glm51, glm5, glm5Turbo } = getGLMStatus(now);
+      const { glm51, glm5Turbo } = getGLMStatus(now);
       const xiaomi = getXiaomiStatus(now);
-      setStatuses({ claude, gpt, glm51, glm5, glm5Turbo, xiaomi });
+      setStatuses({ claude, gpt, glm51, glm5Turbo, xiaomi });
     };
 
     update();

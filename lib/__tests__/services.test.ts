@@ -111,22 +111,17 @@ describe("getGLMStatus", () => {
 
   it("returns peak status at 14:00 UTC+8 (3x for all GLM models)", () => {
     const peakTime = makeUTC8(14);
-    const { glm51, glm5, glm5Turbo } = getGLMStatus(peakTime);
+    const { glm51, glm5Turbo } = getGLMStatus(peakTime);
     expect(glm51.multiplier).toBe("3×");
-    expect(glm5.multiplier).toBe("3×");
     expect(glm5Turbo.multiplier).toBe("3×");
     expect(glm51.statusColor).toBe("red");
-    expect(glm5.statusColor).toBe("red");
     expect(glm5Turbo.statusColor).toBe("red");
   });
 
   it("returns off-peak status at 10:00 UTC+8", () => {
     const offPeakTime = makeUTC8(10);
-    const { glm51, glm5, glm5Turbo } = getGLMStatus(offPeakTime);
-    // GLM-5 is always 2x off-peak
-    expect(glm5.multiplier).toBe("2×");
-    expect(glm5.statusColor).toBe("orange");
-    // GLM-5.1 and Turbo: 1x off-peak before end of June 2026 (test date April)
+    const { glm51, glm5Turbo } = getGLMStatus(offPeakTime);
+    // GLM-5.1/5.2 and Turbo: 1x off-peak before end of September 2026 (test date April)
     expect(glm51.multiplier).toBe("1×");
     expect(glm5Turbo.multiplier).toBe("1×");
     expect(glm51.statusColor).toBe("green");
@@ -135,20 +130,32 @@ describe("getGLMStatus", () => {
 
   it("returns peak status at 17:59 UTC+8", () => {
     const beforeEnd = makeUTC8(17, 21, 4);
-    const { glm5 } = getGLMStatus(beforeEnd);
-    expect(glm5.multiplier).toBe("3×");
-    expect(glm5.statusColor).toBe("red");
+    const { glm51 } = getGLMStatus(beforeEnd);
+    expect(glm51.multiplier).toBe("3×");
+    expect(glm51.statusColor).toBe("red");
   });
 
   it("returns off-peak at exactly 18:00 UTC+8", () => {
     const atEnd = makeUTC8(18);
-    const { glm5 } = getGLMStatus(atEnd);
-    expect(glm5.multiplier).toBe("2×");
-    expect(glm5.statusColor).toBe("orange");
+    const { glm51 } = getGLMStatus(atEnd);
+    // 18:00 is the first off-peak hour (test date April, before promo end → 1×)
+    expect(glm51.multiplier).toBe("1×");
+    expect(glm51.statusColor).toBe("green");
   });
 
-  it("GLM-5.1 and Turbo promotions expire after June 30, 2026", () => {
-    const offPeakAfterPromo = new Date(Date.UTC(2026, 6, 1, 2, 0, 0)); // 10:00 UTC+8 in July
+  it("GLM-5.1/5.2 and Turbo off-peak promo still active in July 2026 (before Sept 30)", () => {
+    const offPeakInJuly = new Date(Date.UTC(2026, 6, 1, 2, 0, 0)); // 10:00 UTC+8 in July
+    const { glm51, glm5Turbo } = getGLMStatus(offPeakInJuly);
+    expect(glm51.multiplier).toBe("1×");
+    expect(glm5Turbo.multiplier).toBe("1×");
+    expect(glm51.promotionExpired).toBe(false);
+    expect(glm5Turbo.promotionExpired).toBe(false);
+    expect(glm51.statusColor).toBe("green");
+    expect(glm5Turbo.statusColor).toBe("green");
+  });
+
+  it("GLM-5.1/5.2 and Turbo promotions expire after September 30, 2026", () => {
+    const offPeakAfterPromo = new Date(Date.UTC(2026, 9, 1, 2, 0, 0)); // 10:00 UTC+8 in October
     const { glm51, glm5Turbo } = getGLMStatus(offPeakAfterPromo);
     expect(glm51.multiplier).toBe("2×");
     expect(glm5Turbo.multiplier).toBe("2×");
@@ -156,6 +163,11 @@ describe("getGLMStatus", () => {
     expect(glm5Turbo.promotionExpired).toBe(true);
     expect(glm51.statusColor).toBe("orange");
     expect(glm5Turbo.statusColor).toBe("orange");
+  });
+
+  it("GLM-5.1 card is shared with GLM-5.2 (same usage rules)", () => {
+    const { glm51 } = getGLMStatus(makeUTC8(10));
+    expect(glm51.name).toBe("GLM-5.1 / 5.2");
   });
 });
 
@@ -269,23 +281,21 @@ describe("getBestTimeRecommendation", () => {
     const rec = getBestTimeRecommendation(
       { ...MOCK_CLAUDE, isBonus: true },
       { ...MOCK_GPT_BONUS, isBonus: true, nextChangeAt: null },
-      { ...MOCK_CLAUDE, isBonus: true, name: "GLM-5.1", multiplier: "1×" },
-      { ...MOCK_CLAUDE, isBonus: true, name: "GLM-5", multiplier: "2×" },
+      { ...MOCK_CLAUDE, isBonus: true, name: "GLM-5.1 / 5.2", multiplier: "1×" },
       { ...MOCK_CLAUDE, isBonus: true, name: "GLM-5-Turbo", multiplier: "1×" },
       { ...MOCK_CLAUDE, isBonus: true, name: "Xiaomi", multiplier: "0.8×" },
     );
     expect(rec.isAllOptimal).toBe(true);
     expect(rec.summary).toBe("All services are at their best rates now!");
     expect(rec.upcomingBestWindow).toBeNull();
-    expect(rec.nowBestServices).toHaveLength(6);
+    expect(rec.nowBestServices).toHaveLength(5);
   });
 
   it("identifies services at bonus rate", () => {
     const rec = getBestTimeRecommendation(
       { ...MOCK_CLAUDE, isBonus: true },
       { ...MOCK_GPT_EXPIRED, isBonus: false },
-      { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5.1" },
-      { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5" },
+      { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5.1 / 5.2" },
       { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5-Turbo" },
       { ...MOCK_CLAUDE, isBonus: false, name: "Xiaomi" },
     );
@@ -298,8 +308,7 @@ describe("getBestTimeRecommendation", () => {
     const rec = getBestTimeRecommendation(
       { ...MOCK_CLAUDE, isBonus: false },
       { ...MOCK_GPT_EXPIRED, isBonus: false },
-      { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5.1" },
-      { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5" },
+      { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5.1 / 5.2" },
       { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5-Turbo" },
       { ...MOCK_CLAUDE, isBonus: false, name: "Xiaomi" },
     );
@@ -313,13 +322,12 @@ describe("getBestTimeRecommendation", () => {
     const rec = getBestTimeRecommendation(
       { ...MOCK_CLAUDE, isBonus: true },
       { ...MOCK_GPT_EXPIRED, isBonus: false },
-      { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5.1", nextChangeAt: futureDate },
-      { ...MOCK_CLAUDE, isBonus: true, name: "GLM-5" },
+      { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5.1 / 5.2", nextChangeAt: futureDate },
       { ...MOCK_CLAUDE, isBonus: true, name: "GLM-5-Turbo" },
       { ...MOCK_CLAUDE, isBonus: false, name: "Xiaomi", nextChangeAt: new Date(Date.now() + 7200000) },
     );
     expect(rec.upcomingBestWindow).not.toBeNull();
-    expect(rec.upcomingBestWindow!.services).toContain("GLM-5.1");
+    expect(rec.upcomingBestWindow!.services).toContain("GLM-5.1 / 5.2");
     expect(rec.upcomingBestWindow!.countdown).toBeTruthy();
   });
 });
@@ -340,10 +348,9 @@ describe("PROVIDERS", () => {
     }
   });
 
-  it("GLM provider has three services", () => {
+  it("GLM provider has two services (GLM-5 removed)", () => {
     const glm = PROVIDERS.glm;
-    expect(glm.services).toContain("glm51");
-    expect(glm.services).toContain("glm5");
-    expect(glm.services).toContain("glm5Turbo");
+    expect(glm.services).toEqual(["glm51", "glm5Turbo"]);
+    expect(glm.services).not.toContain("glm5");
   });
 });

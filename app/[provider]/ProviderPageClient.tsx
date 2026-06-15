@@ -77,7 +77,6 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
   if (providerServices.includes("claude")) serviceCards.push({ key: "claude", status: statuses.claude });
   if (providerServices.includes("codex")) serviceCards.push({ key: "codex", status: statuses.gpt, isCodex: true });
   if (providerServices.includes("glm51")) serviceCards.push({ key: "glm51", status: statuses.glm51 });
-  if (providerServices.includes("glm5")) serviceCards.push({ key: "glm5", status: statuses.glm5 });
   if (providerServices.includes("glm5Turbo")) serviceCards.push({ key: "glm5Turbo", status: statuses.glm5Turbo });
   if (providerServices.includes("xiaomi")) serviceCards.push({ key: "xiaomi", status: statuses.xiaomi });
 
@@ -175,11 +174,6 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
           {providerServices.includes("glm51") && (
             <div className="w-full">
               <Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM Peak Hours" />
-            </div>
-          )}
-          {providerServices.includes("glm5") && (
-            <div className="w-full">
-              <Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5 Peak Hours" />
             </div>
           )}
           {providerServices.includes("glm5Turbo") && (

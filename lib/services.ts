@@ -20,7 +20,7 @@ export const PROVIDERS: Record<ProviderKey, {
   },
   glm: {
     name: "GLM",
-    services: ["glm51", "glm5", "glm5Turbo"],
+    services: ["glm51", "glm5Turbo"],
     color: "cyan",
     description: "Zhipu AI's model family",
   },
@@ -106,15 +106,14 @@ export function getGPTStatus(now: Date): ServiceStatus {
   };
 }
 
-// GLM-5: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 2×
-// GLM-5.1: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 1× (through end of June), then 2×
-// GLM-5-Turbo: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 1× (through end of June), then 2×
+// GLM-5.1 / 5.2: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 1× (through end of September), then 2×
+//   (GLM-5.2 shares the same usage rules as GLM-5.1, so they are tracked as one card.)
+// GLM-5-Turbo: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 1× (through end of September), then 2×
 export function getGLMStatus(now: Date): {
   glm51: ServiceStatus;
-  glm5: ServiceStatus;
   glm5Turbo: ServiceStatus;
 } {
-  const turboPromoEnd = new Date("2026-06-30T23:59:59+08:00");
+  const turboPromoEnd = new Date("2026-09-30T23:59:59+08:00");
 
   const utc8Offset = 8;
   const utc8Time = new Date(now.getTime() + utc8Offset * 60 * 60 * 1000);
@@ -148,21 +147,6 @@ export function getGLMStatus(now: Date): {
 
   const turboOffPeakExpired = now >= turboPromoEnd;
 
-  const glm5: ServiceStatus = {
-    name: "GLM-5",
-    multiplier: isPeak ? "3×" : "2×",
-    isBonus: !isPeak,
-    statusLabel: isPeak ? "Peak — 3× Usage" : "Off-Peak — 2× Usage",
-    statusColor: isPeak ? "red" : "orange",
-    nextChangeAt,
-    nextChangeLabel: isPeak ? "Off-peak starts in" : "Peak starts in",
-    promotionEnd: new Date("2099-12-31"),
-    promotionExpired: false,
-    peakHoursLocal,
-    description: "Peak: 3× consumption, Off-peak: 2×. Use GLM-5 for complex tasks, GLM-4.7 for routine.",
-    details: "Zhipu AI's GLM-5 model. Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak counts as 2×.",
-  };
-
   const turboMultiplier = isPeak ? "3×" : turboOffPeakExpired ? "2×" : "1×";
   const turboIsBonus = !isPeak && !turboOffPeakExpired;
 
@@ -183,19 +167,19 @@ export function getGLMStatus(now: Date): {
     peakHoursLocal,
     description: turboOffPeakExpired
       ? "Peak: 3× consumption, Off-peak: 2×."
-      : "Peak: 3× consumption, Off-peak: 1× (through end of June).",
+      : "Peak: 3× consumption, Off-peak: 1× (through end of September).",
     details: turboOffPeakExpired
       ? "Zhipu AI's GLM-5-Turbo. Peak: 3× consumption, Off-peak: 2×."
-      : "Zhipu AI's GLM-5-Turbo. Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak: 1× until end of June, then 2×.",
+      : "Zhipu AI's GLM-5-Turbo. Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak: 1× until end of September, then 2×.",
   };
 
-  const glm51PromoEnd = new Date("2026-06-30T23:59:59+08:00");
+  const glm51PromoEnd = new Date("2026-09-30T23:59:59+08:00");
   const glm51OffPeakExpired = now >= glm51PromoEnd;
   const glm51Multiplier = isPeak ? "3×" : glm51OffPeakExpired ? "2×" : "1×";
   const glm51IsBonus = !isPeak && !glm51OffPeakExpired;
 
   const glm51: ServiceStatus = {
-    name: "GLM-5.1",
+    name: "GLM-5.1 / 5.2",
     multiplier: glm51Multiplier,
     isBonus: glm51IsBonus,
     statusLabel: isPeak
@@ -211,13 +195,13 @@ export function getGLMStatus(now: Date): {
     peakHoursLocal,
     description: glm51OffPeakExpired
       ? "Peak: 3× consumption, Off-peak: 2×."
-      : "Peak: 3× consumption, Off-peak: 1× (through end of June).",
+      : "Peak: 3× consumption, Off-peak: 1× (through end of September).",
     details: glm51OffPeakExpired
-      ? "Zhipu AI's GLM-5.1. Peak: 3× consumption, Off-peak: 2×."
-      : "Zhipu AI's GLM-5.1. Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak: 1× until end of June, then 2×.",
+      ? "Zhipu AI's GLM-5.1 and GLM-5.2 (same usage rules). Peak: 3× consumption, Off-peak: 2×."
+      : "Zhipu AI's GLM-5.1 and GLM-5.2 (same usage rules). Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak: 1× until end of September, then 2×.",
   };
 
-  return { glm51, glm5, glm5Turbo };
+  return { glm51, glm5Turbo };
 }
 
 // Xiaomi token plan: 0.8× consumption between 16:00–24:00 UTC, 1× otherwise.
@@ -350,7 +334,6 @@ export function getBestTimeRecommendation(
   claude: ServiceStatus,
   gpt: ServiceStatus,
   glm51: ServiceStatus,
-  glm5: ServiceStatus,
   glm5Turbo: ServiceStatus,
   xiaomi: ServiceStatus
 ): BestTimeRecommendation {
@@ -358,7 +341,6 @@ export function getBestTimeRecommendation(
     { name: claude.name, multiplier: claude.multiplier, isBonus: claude.isBonus, isBest: claude.isBonus },
     { name: gpt.name, multiplier: gpt.multiplier, isBonus: gpt.isBonus, isBest: gpt.isBonus },
     { name: glm51.name, multiplier: glm51.multiplier, isBonus: glm51.isBonus, isBest: glm51.isBonus },
-    { name: glm5.name, multiplier: glm5.multiplier, isBonus: glm5.isBonus, isBest: glm5.isBonus },
     { name: glm5Turbo.name, multiplier: glm5Turbo.multiplier, isBonus: glm5Turbo.isBonus, isBest: glm5Turbo.isBonus },
     { name: xiaomi.name, multiplier: xiaomi.multiplier, isBonus: xiaomi.isBonus, isBest: xiaomi.isBonus },
   ];
@@ -381,9 +363,6 @@ export function getBestTimeRecommendation(
     }
     if (!glm51.isBonus && glm51.nextChangeAt) {
       upcoming.push({ service: glm51.name, nextChange: glm51.nextChangeAt });
-    }
-    if (!glm5.isBonus && glm5.nextChangeAt) {
-      upcoming.push({ service: glm5.name, nextChange: glm5.nextChangeAt });
     }
     if (!glm5Turbo.isBonus && glm5Turbo.nextChangeAt) {
       upcoming.push({ service: glm5Turbo.name, nextChange: glm5Turbo.nextChangeAt });

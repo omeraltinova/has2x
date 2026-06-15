@@ -21,9 +21,8 @@ Track AI service usage multipliers in real time. has2x shows whether Claude Code
 |---------|------------|---------------|-------|
 | **Claude Code** | None for Pro/Max | Peak-hour limit reduction removed; normal five-hour limits all day | Claude Code only. Claude chat and API limits may differ. |
 | **Codex** | None | 2× active 24/7 until May 31, 2026 | Applies to Pro subscriptions according to the app copy. |
-| **GLM-5.1** | 2PM-6PM Beijing Time | Peak: 3× usage; off-peak: 1× until Apr 30, 2026, then 2× | Local time is calculated in the browser. |
-| **GLM-5** | 2PM-6PM Beijing Time | Peak: 3× usage; off-peak: 2× usage | Best used off-peak when possible. |
-| **GLM-5-Turbo** | 2PM-6PM Beijing Time | Peak: 3× usage; off-peak: 1× until Apr 30, 2026, then 2× | Local time is calculated in the browser. |
+| **GLM-5.1 / 5.2** | 2PM-6PM Beijing Time | Peak: 3× usage; off-peak: 1× until Sep 30, 2026, then 2× | GLM-5.2 shares the same usage rules as GLM-5.1, so they are tracked as one card. |
+| **GLM-5-Turbo** | 2PM-6PM Beijing Time | Peak: 3× usage; off-peak: 1× until Sep 30, 2026, then 2× | Local time is calculated in the browser. |
 
 ## Pages
 
@@ -32,25 +31,25 @@ Track AI service usage multipliers in real time. has2x shows whether Claude Code
 | `/` | Main dashboard with all selected services. |
 | `/claude` | Claude Code provider view. |
 | `/codex` | Codex-only provider view. |
-| `/glm` | GLM provider view with GLM-5.1, GLM-5, and GLM-5-Turbo. |
+| `/glm` | GLM provider view with GLM-5.1 / 5.2 and GLM-5-Turbo. |
 
 ## URL Parameters
 
 | Parameter | Example | Description |
 |-----------|---------|-------------|
 | `widget` | `?widget=true` | Shows the compact embeddable widget UI. |
-| `services` | `?services=codex,glm5` | Shows only the selected service keys. |
+| `services` | `?services=codex,glm5Turbo` | Shows only the selected service keys. |
 
 Supported service keys:
 
 ```text
-claude,codex,glm51,glm5,glm5Turbo
+claude,codex,glm51,glm5Turbo
 ```
 
 Example:
 
 ```text
-/?widget=true&services=codex,glm5,glm5Turbo
+/?widget=true&services=codex,glm5Turbo
 ```
 
 ## Embedding
@@ -58,7 +57,7 @@ Example:
 The app can generate an iframe snippet from the **Get Widget** button on the dashboard. A widget URL looks like this:
 
 ```html
-<iframe src="https://has2x.vercel.app/?widget=true&services=codex,glm5" width="100%" height="400px" frameborder="0"></iframe>
+<iframe src="https://has2x.vercel.app/?widget=true&services=codex,glm5Turbo" width="100%" height="400px" frameborder="0"></iframe>
 ```
 
 ## Getting Started
