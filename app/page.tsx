@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useHasHydrated } from "@/lib/useHasHydrated";
-import { useStatuses } from "@/lib/useStatuses";
 import { safeGetItem } from "@/lib/safeGetItem";
 import {
   getPeakRangesLocal,
@@ -18,12 +17,13 @@ import { BestTimeCard } from "@/app/components/BestTimeCard";
 import { ServicePanel } from "@/app/components/ServicePanel";
 import { SiteHeader } from "@/app/components/SiteHeader";
 import { WidgetCard } from "@/app/components/WidgetCard";
+import { useDashboardState } from "@/app/components/DashboardStateProvider";
 
 const ALL_SERVICES = ["glm53", "glm53Flash", "deepseek", "xiaomi"] as const;
 type ServiceKey = typeof ALL_SERVICES[number];
 
 function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initialServices: ServiceKey[] }) {
-  const statuses = useStatuses();
+  const { statuses } = useDashboardState();
   const recommendation = useMemo(() => {
     if (!statuses) return null;
     return getBestTimeRecommendation(

@@ -3,7 +3,6 @@
 import { useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useHasHydrated } from "@/lib/useHasHydrated";
-import { useStatuses } from "@/lib/useStatuses";
 import {
   getPeakRangesLocal,
   getWeekdayPeakRangesLocal,
@@ -18,12 +17,109 @@ import {
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import { ServicePanel } from "@/app/components/ServicePanel";
 import { SiteHeader } from "@/app/components/SiteHeader";
+import { useDashboardState } from "@/app/components/DashboardStateProvider";
+import type { AllStatuses } from "@/lib/useStatuses";
+
+type ProviderServiceCard = {
+  key: string;
+  status: ServiceStatus;
+  peakRanges: PeakRange[];
+  currentHour: number;
+  serviceColor: string;
+  label: string;
+};
+
+function getProviderServiceCards(
+  providerKey: ProviderKey,
+  statuses: AllStatuses,
+  scheduleNow: Date,
+  currentHour: number,
+): ProviderServiceCard[] {
+  const services = PROVIDERS[providerKey].services;
+  const cards: ProviderServiceCard[] = [];
+
+  if (services.includes("glm53")) {
+    cards.push({
+      key: "glm53",
+      status: statuses.glm53,
+      peakRanges: getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, scheduleNow),
+      currentHour,
+      serviceColor: "red",
+      label: "GLM-5.3 Peak Hours",
+    });
+  }
+  if (services.includes("glm53Flash")) {
+    cards.push({
+      key: "glm53Flash",
+      status: statuses.glm53Flash,
+      peakRanges: getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, scheduleNow),
+      currentHour,
+      serviceColor: "red",
+      label: "GLM-5.3-Flash Peak Hours",
+    });
+  }
+  if (services.includes("deepseek")) {
+    cards.push({
+      key: "deepseek",
+      status: statuses.deepseek,
+      peakRanges: getWeekdayPeakRangesLocal(DEEPSEEK_PEAK_WINDOWS, scheduleNow),
+      currentHour,
+      serviceColor: "red",
+      label: "DeepSeek API Peak Hours",
+    });
+  }
+  if (services.includes("xiaomi")) {
+    cards.push({
+      key: "xiaomi",
+      status: statuses.xiaomi,
+      peakRanges: getPeakRangesLocal(16, 24, 0, scheduleNow),
+      currentHour,
+      serviceColor: "green",
+      label: "Xiaomi Bonus Hours",
+    });
+  }
+
+  return cards;
+}
+
+function ProviderServicesSection({
+  providerKey,
+  serviceCards,
+  isOutgoing = false,
+}: {
+  providerKey: ProviderKey;
+  serviceCards: ProviderServiceCard[];
+  isOutgoing?: boolean;
+}) {
+  return (
+    <section
+      className={`services-section provider-services-section${isOutgoing ? " provider-services-section--exit" : ""}`}
+      aria-labelledby={`provider-services-heading-${providerKey}`}
+      aria-hidden={isOutgoing || undefined}
+      inert={isOutgoing}
+    >
+      <div className="section-heading">
+        <div>
+          <h2 id={`provider-services-heading-${providerKey}`}>Usage and schedules</h2>
+          <p>Current multipliers and daily peak windows.</p>
+        </div>
+      </div>
+
+      <div className={`service-grid ${serviceCards.length === 1 ? "service-grid--single" : ""}`}>
+        {serviceCards.map(({ key, ...service }) => (
+          <ServicePanel key={key} {...service} animateOnScroll={false} />
+        ))}
+      </div>
+    </section>
+  );
+}
 
 function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
   const provider = PROVIDERS[providerKey];
-  const statuses = useStatuses();
+  const { statuses, providerTransition } = useDashboardState();
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
   const isHydrated = useHasHydrated();
+  const outgoingProvider = providerTransition?.to === providerKey ? providerTransition.from : null;
 
   if (!isHydrated || !statuses) {
     return (
@@ -33,22 +129,9 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
     );
   }
 
-  const providerServices = provider.services;
   const scheduleNow = new Date();
   const currentHour = getCurrentLocalHour(scheduleNow);
-
-  const serviceCards: {
-    key: string;
-    status: ServiceStatus;
-    peakRanges: PeakRange[];
-    currentHour: number;
-    serviceColor: string;
-    label: string;
-  }[] = [];
-  if (providerServices.includes("glm53")) serviceCards.push({ key: "glm53", status: statuses.glm53, peakRanges: getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, scheduleNow), currentHour, serviceColor: "red", label: "GLM-5.3 Peak Hours" });
-  if (providerServices.includes("glm53Flash")) serviceCards.push({ key: "glm53Flash", status: statuses.glm53Flash, peakRanges: getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, scheduleNow), currentHour, serviceColor: "red", label: "GLM-5.3-Flash Peak Hours" });
-  if (providerServices.includes("deepseek")) serviceCards.push({ key: "deepseek", status: statuses.deepseek, peakRanges: getWeekdayPeakRangesLocal(DEEPSEEK_PEAK_WINDOWS, scheduleNow), currentHour, serviceColor: "red", label: "DeepSeek API Peak Hours" });
-  if (providerServices.includes("xiaomi")) serviceCards.push({ key: "xiaomi", status: statuses.xiaomi, peakRanges: getPeakRangesLocal(16, 24, 0, scheduleNow), currentHour, serviceColor: "green", label: "Xiaomi Bonus Hours" });
+  const serviceCards = getProviderServiceCards(providerKey, statuses, scheduleNow, currentHour);
 
   return (
     <div className="dashboard-shell">
@@ -58,26 +141,24 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
           title={provider.name}
           description={provider.description}
           timezone={timezone}
+          outgoingProvider={outgoingProvider}
         />
 
-        <section
-          key={providerKey}
-          className="services-section provider-services-section"
-          aria-labelledby="provider-services-heading"
-        >
-          <div className="section-heading">
-            <div>
-              <h2 id="provider-services-heading">Usage and schedules</h2>
-              <p>Current multipliers and daily peak windows.</p>
-            </div>
-          </div>
-
-          <div className={`service-grid ${serviceCards.length === 1 ? "service-grid--single" : ""}`}>
-            {serviceCards.map(({ key, ...service }) => (
-              <ServicePanel key={key} {...service} animateOnScroll={false} />
-            ))}
-          </div>
-        </section>
+        <div className={`provider-transition-stage${outgoingProvider ? " provider-transition-stage--active" : ""}`}>
+          {outgoingProvider && (
+            <ProviderServicesSection
+              key={`outgoing-${outgoingProvider}`}
+              providerKey={outgoingProvider}
+              serviceCards={getProviderServiceCards(outgoingProvider, statuses, scheduleNow, currentHour)}
+              isOutgoing
+            />
+          )}
+          <ProviderServicesSection
+            key={`current-${providerKey}`}
+            providerKey={providerKey}
+            serviceCards={serviceCards}
+          />
+        </div>
 
         <footer className="dashboard-footer">
           <div className="footer-notes">
