@@ -54,6 +54,11 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
       icon: "text-zinc-500 dark:text-zinc-500",
     },
   }[status.statusColor];
+  const statusTone = status.statusColor === "green"
+    ? "status-tone-positive"
+    : status.statusColor === "red"
+      ? "status-tone-negative"
+      : "";
 
   const getLimitText = () => {
     if (status.rateUnit) return status.rateUnit;
@@ -63,20 +68,20 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
   const getServiceIcon = (name: string) => {
     switch (name) {
       case "GLM-5.3":
-        return <Sparkles className={`w-5 h-5 ${colorStyles.icon}`} />;
+        return <Sparkles className={`status-widget-icon w-5 h-5 ${colorStyles.icon}`} />;
       case "GLM-5.3-Flash":
-        return <Zap className={`w-5 h-5 ${colorStyles.icon}`} />;
+        return <Zap className={`status-widget-icon w-5 h-5 ${colorStyles.icon}`} />;
       case "DeepSeek API":
-        return <Cpu className={`w-5 h-5 ${colorStyles.icon}`} />;
+        return <Cpu className={`status-widget-icon w-5 h-5 ${colorStyles.icon}`} />;
       case "Xiaomi":
-        return <Smartphone className={`w-5 h-5 ${colorStyles.icon}`} />;
+        return <Smartphone className={`status-widget-icon w-5 h-5 ${colorStyles.icon}`} />;
       default:
-        return <Cpu className={`w-5 h-5 ${colorStyles.icon}`} />;
+        return <Cpu className={`status-widget-icon w-5 h-5 ${colorStyles.icon}`} />;
     }
   };
 
   return (
-    <div className={`relative w-full sm:w-[270px] h-[92px] rounded-xl border ${colorStyles.bg} ${colorStyles.border} p-4 flex items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all duration-300 overflow-visible group/card`}>
+    <div className={`status-widget ${statusTone} relative w-full sm:w-[270px] h-[92px] rounded-xl border ${colorStyles.bg} ${colorStyles.border} p-4 flex items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all duration-300 overflow-visible group/card`}>
       <div className="flex items-center gap-3">
         <div className={`p-2 rounded-lg bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800`}>
           {getServiceIcon(status.name)}
@@ -98,7 +103,7 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
             )}
           </div>
           <div className="flex items-baseline gap-1.5 mt-0.5">
-            <span className={`text-xl font-bold ${colorStyles.text} tracking-tight leading-none`}>
+            <span className={`status-widget-tone text-xl font-bold ${colorStyles.text} tracking-tight leading-none`}>
               {status.multiplier}
             </span>
             <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
@@ -112,11 +117,11 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
         <div className="flex items-center gap-1.5">
           <span className="relative flex h-2 w-2">
             {status.statusColor === "green" && (
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${colorStyles.dot}`}></span>
+              <span className={`status-widget-dot animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${colorStyles.dot}`}></span>
             )}
-            <span className={`relative inline-flex rounded-full h-2 w-2 ${colorStyles.dot}`}></span>
+            <span className={`status-widget-dot relative inline-flex rounded-full h-2 w-2 ${colorStyles.dot}`}></span>
           </span>
-          <span className={`text-xs font-medium ${colorStyles.text}`}>
+          <span className={`status-widget-tone text-xs font-medium ${colorStyles.text}`}>
             {status.statusLabel.split('—')[0].trim()}
           </span>
         </div>

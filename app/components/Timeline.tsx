@@ -27,17 +27,11 @@ export function Timeline({
     const pct = (hour / 24) * 100;
     const nextPct = ((hour + 1) / 24) * 100;
 
-    let rgba: string;
-    if (peakIsBonus) {
-      rgba = isInPeak ? "color-mix(in srgb, var(--accent) 50%, transparent)" : "rgba(239, 68, 68, 0.5)";
-    } else if (isInPeak) {
-      const color = serviceColor === "red" ? "239, 68, 68" : "245, 158, 11";
-      rgba = `rgba(${color}, 0.5)`;
-    } else {
-      rgba = "color-mix(in srgb, var(--accent) 40%, transparent)";
-    }
-    gradientStops.push(`${rgba} ${pct}%`);
-    gradientStops.push(`${rgba} ${nextPct}%`);
+    const isPositiveWindow = peakIsBonus === isInPeak;
+    const colorToken = isPositiveWindow ? "--status-positive-text" : "--status-negative-text";
+    const color = `color-mix(in srgb, var(${colorToken}) var(--timeline-intensity), transparent)`;
+    gradientStops.push(`${color} ${pct}%`);
+    gradientStops.push(`${color} ${nextPct}%`);
   }
 
   const currentPct = ((currentHour + 0.5) / 24) * 100;
@@ -79,15 +73,10 @@ export function Timeline({
           >
             {hoveredHour.toString().padStart(2, "0")}:00
             <span
-              className={`ml-1 ${
-                peakIsBonus
-                  ? isHoveredPeak
-                    ? "text-accent-text"
-                    : "text-red-400"
-                  : isHoveredPeak
-                    ? "text-red-400"
-                    : "text-accent-text"
-              }`}
+              className="ml-1"
+              style={{
+                color: `var(${peakIsBonus === isHoveredPeak ? "--status-positive-text" : "--status-negative-text"})`,
+              }}
             >
               {peakIsBonus
                 ? isHoveredPeak
@@ -100,7 +89,7 @@ export function Timeline({
           </div>
         )}
         <div 
-          className="relative h-2 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800/80 shadow-inner cursor-crosshair"
+          className="relative h-3 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800/80 shadow-inner cursor-crosshair"
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHoveredHour(null)}
           onTouchStart={handleTouchStart}

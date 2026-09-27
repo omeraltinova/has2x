@@ -30,6 +30,22 @@
   --grid-line: rgba(16, 185, 129, 0.03);
 }
 
+:root {
+  --status-positive-fill: var(--accent);
+  --status-positive-text: var(--accent-text);
+  --status-positive-bg: color-mix(in srgb, var(--accent) 5%, transparent);
+  --status-positive-border: color-mix(in srgb, var(--accent) 40%, transparent);
+  --status-negative-fill: #ef4444;
+  --status-negative-text: #dc2626;
+  --status-negative-bg: rgba(239, 68, 68, 0.05);
+  --status-negative-border: rgba(239, 68, 68, 0.4);
+  --timeline-intensity: 50%;
+}
+
+.dark {
+  --status-negative-text: #f87171;
+}
+
 /* Sunset Theme (Rose/Coral Accent) */
 [data-theme="sunset"] {
   --background: #fffafb;
@@ -43,6 +59,15 @@
   --accent-hover: #be123c;
   --accent-glow: rgba(244, 63, 94, 0.06);
   --grid-line: rgba(244, 63, 94, 0.04);
+  --status-positive-fill: #047857;
+  --status-positive-text: #047857;
+  --status-positive-bg: rgba(4, 120, 87, 0.05);
+  --status-positive-border: rgba(4, 120, 87, 0.4);
+  --status-negative-fill: #be123c;
+  --status-negative-text: #be123c;
+  --status-negative-bg: rgba(190, 18, 60, 0.05);
+  --status-negative-border: rgba(190, 18, 60, 0.4);
+  --timeline-intensity: 88%;
 }
 
 .dark[data-theme="sunset"] {
@@ -57,6 +82,15 @@
   --accent-hover: #fecdd3;
   --accent-glow: rgba(244, 63, 94, 0.06);
   --grid-line: rgba(244, 63, 94, 0.03);
+  --status-positive-fill: #0f766e;
+  --status-positive-text: #5eead4;
+  --status-positive-bg: rgba(94, 234, 212, 0.08);
+  --status-positive-border: rgba(94, 234, 212, 0.42);
+  --status-negative-fill: #9f1239;
+  --status-negative-text: #fb7185;
+  --status-negative-bg: rgba(251, 113, 133, 0.1);
+  --status-negative-border: rgba(251, 113, 133, 0.45);
+  --timeline-intensity: 90%;
 }
 
 /* Ocean Theme (Blue/Navy Accent) */
@@ -115,6 +149,76 @@
   --accent-hover: #e9d5ff;
   --accent-glow: rgba(168, 85, 247, 0.06);
   --grid-line: rgba(168, 85, 247, 0.03);
+}
+
+.status-state-card.status-tone-positive {
+  border-color: var(--status-positive-border);
+  background-color: var(--status-positive-bg);
+}
+
+.status-state-card.status-tone-negative {
+  border-color: var(--status-negative-border);
+  background-color: var(--status-negative-bg);
+}
+
+.status-state-card.status-tone-positive .status-tone-badge {
+  background-color: var(--status-positive-fill);
+  color: white;
+}
+
+.status-state-card.status-tone-negative .status-tone-badge {
+  background-color: var(--status-negative-fill);
+  color: white;
+}
+
+.status-state-card.status-tone-positive .status-tone-text {
+  color: var(--status-positive-text);
+}
+
+.status-state-card.status-tone-negative .status-tone-text {
+  color: var(--status-negative-text);
+}
+
+.status-widget.status-tone-positive {
+  background-color: color-mix(in srgb, var(--status-positive-fill) 10%, transparent);
+  border-color: color-mix(in srgb, var(--status-positive-text) 30%, transparent);
+}
+
+.status-widget.status-tone-positive:hover {
+  border-color: color-mix(in srgb, var(--status-positive-text) 50%, transparent);
+}
+
+.status-widget.status-tone-negative {
+  background-color: color-mix(in srgb, var(--status-negative-fill) 10%, transparent);
+  border-color: color-mix(in srgb, var(--status-negative-text) 30%, transparent);
+}
+
+.status-widget.status-tone-negative:hover {
+  border-color: color-mix(in srgb, var(--status-negative-text) 50%, transparent);
+}
+
+.status-widget.status-tone-positive .status-widget-tone {
+  color: var(--status-positive-text);
+}
+
+.status-widget.status-tone-negative .status-widget-tone {
+  color: var(--status-negative-text);
+}
+
+.status-widget.status-tone-positive .status-widget-dot {
+  background-color: var(--status-positive-fill);
+}
+
+.status-widget.status-tone-negative .status-widget-dot {
+  background-color: var(--status-negative-fill);
+}
+
+.status-widget.status-tone-positive .status-widget-icon {
+  color: var(--status-positive-text);
+}
+
+.status-widget.status-tone-negative .status-widget-icon {
+  color: var(--status-negative-text);
 }
 
 @theme inline {

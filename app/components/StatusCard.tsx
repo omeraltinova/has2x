@@ -54,10 +54,15 @@ export function StatusCard({ status }: { status: ServiceStatus }) {
     orange: "text-amber-600 dark:text-amber-400",
     gray: "text-zinc-500",
   }[status.statusColor];
+  const statusTone = status.statusColor === "green"
+    ? "status-tone-positive"
+    : status.statusColor === "red"
+      ? "status-tone-negative"
+      : "";
 
   return (
     <div
-      className={`relative flex flex-col rounded-2xl border-2 ${bgColor} p-6 shadow-lg ${glowColor} transition-all duration-300 hover:scale-[1.02] h-full w-full`}
+      className={`status-state-card ${statusTone} relative flex flex-col rounded-2xl border-2 ${bgColor} p-6 shadow-lg ${glowColor} transition-all duration-300 hover:scale-[1.02] h-full w-full`}
     >
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -79,7 +84,7 @@ export function StatusCard({ status }: { status: ServiceStatus }) {
           )}
         </div>
         <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeColor}`}
+          className={`status-tone-badge rounded-full px-3 py-1 text-xs font-semibold ${badgeColor}`}
         >
           {status.multiplier}
         </span>
@@ -87,7 +92,7 @@ export function StatusCard({ status }: { status: ServiceStatus }) {
 
       <div className="mb-3">
         <span
-          className={`inline-block rounded-lg px-3 py-1.5 text-sm font-semibold ${badgeColor}`}
+          className={`status-tone-badge inline-block rounded-lg px-3 py-1.5 text-sm font-semibold ${badgeColor}`}
         >
           {status.statusLabel}
         </span>
@@ -114,7 +119,7 @@ export function StatusCard({ status }: { status: ServiceStatus }) {
             {status.nextChangeLabel}
           </p>
           <p
-            className={`text-2xl font-mono font-bold tabular-nums ${multiplierColor}`}
+            className={`status-tone-text text-2xl font-mono font-bold tabular-nums ${multiplierColor}`}
           >
             {countdown}
           </p>
