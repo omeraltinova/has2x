@@ -24,42 +24,6 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
     return () => clearInterval(interval);
   }, [status.nextChangeAt]);
 
-  const colorStyles = {
-    green: {
-      bg: "bg-accent/10 dark:bg-accent/5",
-      border: "border-accent/30 hover:border-accent/50",
-      text: "text-accent-text",
-      dot: "bg-accent",
-      icon: "text-accent-text",
-    },
-    red: {
-      bg: "bg-red-500/10 dark:bg-red-500/5",
-      border: "border-red-500/30 hover:border-red-500/50",
-      text: "text-red-700 dark:text-red-400",
-      dot: "bg-red-500",
-      icon: "text-red-600 dark:text-red-500",
-    },
-    orange: {
-      bg: "bg-amber-500/10 dark:bg-amber-500/5",
-      border: "border-amber-500/30 hover:border-amber-500/50",
-      text: "text-amber-700 dark:text-amber-400",
-      dot: "bg-amber-500",
-      icon: "text-amber-600 dark:text-amber-500",
-    },
-    gray: {
-      bg: "bg-zinc-500/10 dark:bg-zinc-500/5",
-      border: "border-zinc-500/30 hover:border-zinc-500/50",
-      text: "text-zinc-600 dark:text-zinc-400",
-      dot: "bg-zinc-500",
-      icon: "text-zinc-500 dark:text-zinc-500",
-    },
-  }[status.statusColor];
-  const statusTone = status.statusColor === "green"
-    ? "status-tone-positive"
-    : status.statusColor === "red"
-      ? "status-tone-negative"
-      : "";
-
   const getLimitText = () => {
     if (status.rateUnit) return status.rateUnit;
     return status.isBonus ? "bonus limits" : "usage count";
@@ -68,71 +32,65 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
   const getServiceIcon = (name: string) => {
     switch (name) {
       case "GLM-5.3":
-        return <Sparkles className={`status-widget-icon w-5 h-5 ${colorStyles.icon}`} />;
+        return <Sparkles className="status-widget-icon" aria-hidden="true" />;
       case "GLM-5.3-Flash":
-        return <Zap className={`status-widget-icon w-5 h-5 ${colorStyles.icon}`} />;
+        return <Zap className="status-widget-icon" aria-hidden="true" />;
       case "DeepSeek API":
-        return <Cpu className={`status-widget-icon w-5 h-5 ${colorStyles.icon}`} />;
+        return <Cpu className="status-widget-icon" aria-hidden="true" />;
       case "Xiaomi":
-        return <Smartphone className={`status-widget-icon w-5 h-5 ${colorStyles.icon}`} />;
+        return <Smartphone className="status-widget-icon" aria-hidden="true" />;
       default:
-        return <Cpu className={`status-widget-icon w-5 h-5 ${colorStyles.icon}`} />;
+        return <Cpu className="status-widget-icon" aria-hidden="true" />;
     }
   };
 
+  const detailsId = `widget-details-${status.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+
   return (
-    <div className={`status-widget ${statusTone} relative w-full sm:w-[270px] h-[92px] rounded-xl border ${colorStyles.bg} ${colorStyles.border} p-4 flex items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all duration-300 overflow-visible group/card`}>
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800`}>
+    <article
+      className={`status-widget status-widget--${status.statusColor}`}
+      aria-label={`${status.name}: ${status.statusLabel}, ${status.multiplier}`}
+    >
+      <div className="status-widget-identity">
+        <div className="status-widget-icon-wrap">
           {getServiceIcon(status.name)}
         </div>
-        
-        <div className="flex flex-col">
-          <div className="flex items-center gap-1.5">
-            <h3 className="text-[15px] font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-              {status.name}
-            </h3>
-            {status.details && (
-              <div className="group/tooltip relative flex items-center">
-                <Info className="w-3.5 h-3.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors cursor-help" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 bg-zinc-900/95 backdrop-blur-sm text-zinc-100 text-xs rounded-lg opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 pointer-events-none z-50 shadow-xl border border-white/10 translate-y-1 group-hover/tooltip:translate-y-0">
-                  {status.details}
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-zinc-900/95"></div>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="flex items-baseline gap-1.5 mt-0.5">
-            <span className={`status-widget-tone text-xl font-bold ${colorStyles.text} tracking-tight leading-none`}>
-              {status.multiplier}
-            </span>
-            <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-              {getLimitText()}
-            </span>
-          </div>
+        <div className="status-widget-title-group">
+          <h3 className="status-widget-name">{status.name}</h3>
+          {status.details && (
+            <div className="status-widget-detail">
+              <button
+                type="button"
+                className="status-widget-info"
+                aria-label={`More information about ${status.name}`}
+                aria-describedby={detailsId}
+              >
+                <Info aria-hidden="true" />
+              </button>
+              <span id={detailsId} className="status-widget-tooltip" role="tooltip">
+                {status.details}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex flex-col items-end gap-1 text-right shrink-0">
-        <div className="flex items-center gap-1.5">
-          <span className="relative flex h-2 w-2">
-            {status.statusColor === "green" && (
-              <span className={`status-widget-dot animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${colorStyles.dot}`}></span>
-            )}
-            <span className={`status-widget-dot relative inline-flex rounded-full h-2 w-2 ${colorStyles.dot}`}></span>
-          </span>
-          <span className={`status-widget-tone text-xs font-medium ${colorStyles.text}`}>
-            {status.statusLabel.split('—')[0].trim()}
-          </span>
-        </div>
-        
-        {countdown && (
-          <div className="mt-1 bg-white/50 dark:bg-zinc-900/50 px-2 py-0.5 rounded-md border border-zinc-200/50 dark:border-zinc-700/50">
-            <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block leading-tight">Changes in</span>
-            <span className="text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 leading-tight tracking-tight">{countdown}</span>
-          </div>
-        )}
+      <div className="status-widget-state">
+        <span className="status-widget-dot" aria-hidden="true" />
+        <span>{status.statusLabel.split("—")[0].trim()}</span>
       </div>
-    </div>
+
+      <div className="status-widget-metric">
+        <span className="status-widget-multiplier">{status.multiplier}</span>
+        <span className="status-widget-unit">{getLimitText()}</span>
+      </div>
+
+      {countdown && (
+        <div className="status-widget-countdown">
+          <span className="status-widget-countdown-label">In</span>
+          <span className="status-widget-countdown-value">{countdown}</span>
+        </div>
+      )}
+    </article>
   );
 }

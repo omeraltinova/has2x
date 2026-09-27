@@ -2,10 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { useHasHydrated } from "@/lib/useHasHydrated";
-import { useTheme } from "@/lib/useTheme";
-import { ThemeSelector } from "@/app/components/ThemeSelector";
 import { useStatuses } from "@/lib/useStatuses";
 import { safeGetItem } from "@/lib/safeGetItem";
 import {
@@ -15,21 +12,17 @@ import {
   DEEPSEEK_PEAK_WINDOWS,
   getCurrentLocalHour,
   getBestTimeRecommendation,
-  PROVIDERS,
-  type ProviderKey,
 } from "@/lib/services";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
-import { AnimatedHeader } from "@/app/components/AnimatedHeader";
-import { Timeline } from "@/app/components/Timeline";
 import { BestTimeCard } from "@/app/components/BestTimeCard";
-import { StatusCard } from "@/app/components/StatusCard";
+import { ServicePanel } from "@/app/components/ServicePanel";
+import { SiteHeader } from "@/app/components/SiteHeader";
 import { WidgetCard } from "@/app/components/WidgetCard";
 
 const ALL_SERVICES = ["glm53", "glm53Flash", "deepseek", "xiaomi"] as const;
 type ServiceKey = typeof ALL_SERVICES[number];
 
 function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initialServices: ServiceKey[] }) {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const statuses = useStatuses();
   const recommendation = useMemo(() => {
     if (!statuses) return null;
@@ -38,7 +31,6 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
     );
   }, [statuses]);
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
-  const { theme, toggleTheme } = useTheme();
   const [visibleServices, setVisibleServices] = useState<ServiceKey[]>(initialServices);
   const [showBestTime, setShowBestTime] = useState(true);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -97,28 +89,18 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
     });
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    setMousePosition({ x: e.clientX, y: e.clientY });
-  };
-
   if (!isHydrated || !statuses) {
     return (
-      <div className={`flex min-h-screen items-center justify-center ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}>
+      <div className="dashboard-loading">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-accent-text" />
-        <div
-          className="pointer-events-none fixed inset-0 z-0"
-          style={{
-            background: `radial-gradient(600px circle at 50% 50%, rgba(16, 185, 129, 0.06), transparent 40%)`,
-          }}
-        />
       </div>
     );
   }
 
   if (isWidget) {
     return (
-      <div className={`min-h-screen p-2 ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}>
-      <div className="flex flex-wrap justify-center gap-2">
+      <div className="widget-page">
+        <div className={`widget-grid ${visibleServices.length === 1 ? "widget-grid--single" : ""}`}>
           {visibleServices.includes("glm53") && <WidgetCard status={statuses.glm53} />}
           {visibleServices.includes("glm53Flash") && <WidgetCard status={statuses.glm53Flash} />}
           {visibleServices.includes("deepseek") && <WidgetCard status={statuses.deepseek} />}
@@ -128,174 +110,161 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
     );
   }
 
+  const scheduleNow = new Date();
+  const currentHour = getCurrentLocalHour(scheduleNow);
+  const services = [
+    {
+      key: "glm53",
+      status: statuses.glm53,
+      peakRanges: getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, scheduleNow),
+      currentHour,
+      serviceColor: "red",
+      label: "GLM-5.3 Peak Hours",
+    },
+    {
+      key: "glm53Flash",
+      status: statuses.glm53Flash,
+      peakRanges: getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, scheduleNow),
+      currentHour,
+      serviceColor: "red",
+      label: "GLM-5.3-Flash Peak Hours",
+    },
+    {
+      key: "deepseek",
+      status: statuses.deepseek,
+      peakRanges: getWeekdayPeakRangesLocal(DEEPSEEK_PEAK_WINDOWS, scheduleNow),
+      currentHour,
+      serviceColor: "red",
+      label: "DeepSeek API Peak Hours",
+    },
+    {
+      key: "xiaomi",
+      status: statuses.xiaomi,
+      peakRanges: getPeakRangesLocal(16, 24, 0, scheduleNow),
+      currentHour,
+      serviceColor: "green",
+      label: "Xiaomi Bonus Hours",
+    },
+  ].filter((service) => visibleServices.includes(service.key as ServiceKey));
+  const isFiltered = visibleServices.length < ALL_SERVICES.length || !showBestTime;
+
   return (
-    <div 
-      className={`min-h-screen px-3 py-8 sm:px-4 md:px-6 lg:px-8 xl:px-10 relative overflow-hidden ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}
-      onMouseMove={handleMouseMove}
-    >
-      <ThemeSelector />
-      <div
-        className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
-        style={{
-          background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, var(--accent-glow), transparent 40%)`,
-        }}
-      />
-      <div className="mx-auto max-w-[1600px] relative z-10">
-        <header className="mb-10 text-center">
-          <AnimatedHeader />
-          <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400">
-            Real-time AI service usage multiplier tracker
-          </p>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
-            Timezone: {timezone}
-          </p>
-          <nav className="mt-5 flex justify-center gap-3">
-            {(Object.entries(PROVIDERS) as [ProviderKey, typeof PROVIDERS[ProviderKey]][]).map(([key, p]) => {
-              const colorMap: Record<string, { bg: string; border: string; text: string }> = {
-                orange: { bg: "bg-orange-500/10 dark:bg-orange-500/5", border: "border-orange-500/30 hover:border-orange-500/50", text: "text-orange-600 dark:text-orange-400" },
-                green: { bg: "bg-accent/10 dark:bg-accent/5", border: "border-accent/30 hover:border-accent/50", text: "text-accent-text" },
-                cyan: { bg: "bg-cyan-500/10 dark:bg-cyan-500/5", border: "border-cyan-500/30 hover:border-cyan-500/50", text: "text-cyan-600 dark:text-cyan-400" },
-                blue: { bg: "bg-blue-500/10 dark:bg-blue-500/5", border: "border-blue-500/30 hover:border-blue-500/50", text: "text-blue-600 dark:text-blue-400" },
-                yellow: { bg: "bg-yellow-500/10 dark:bg-yellow-500/5", border: "border-yellow-500/30 hover:border-yellow-500/50", text: "text-yellow-600 dark:text-yellow-400" },
-              };
-              const c = colorMap[p.color] || colorMap.green;
-              return (
-                <Link
-                  key={key}
-                  href={`/${key}`}
-                  className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${c.bg} ${c.border} ${c.text}`}
-                >
-                  {p.name}
-                </Link>
-              );
-            })}
-          </nav>
-        </header>
+    <div className="dashboard-shell">
+      <main className="dashboard-container">
+        <SiteHeader
+          activeProvider={null}
+          title="Service overview"
+          description="Compare peak and off-peak usage across providers."
+          timezone={timezone}
+        />
 
         {recommendation && showBestTime && (
-          <div className="mb-8">
+          <div className="best-time-section">
             <BestTimeCard recommendation={recommendation} />
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {visibleServices.includes("glm53") && (
-            <div className="flex flex-col">
-              <div className="flex flex-1"><StatusCard status={statuses.glm53} /></div>
-              <div className="mt-4"><Timeline peakRanges={getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5.3 Peak Hours" /></div>
+        <section className="services-section" aria-labelledby="services-heading">
+          <div className="section-heading">
+            <div>
+              <h2 id="services-heading">Usage by service</h2>
+              <p>Current multipliers and daily peak windows.</p>
             </div>
-          )}
-          {visibleServices.includes("glm53Flash") && (
-            <div className="flex flex-col">
-              <div className="flex flex-1"><StatusCard status={statuses.glm53Flash} /></div>
-              <div className="mt-4"><Timeline peakRanges={getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5.3-Flash Peak Hours" /></div>
-            </div>
-          )}
-          {visibleServices.includes("deepseek") && (
-            <div className="flex flex-col">
-              <div className="flex flex-1"><StatusCard status={statuses.deepseek} /></div>
-              <div className="mt-4"><Timeline peakRanges={getWeekdayPeakRangesLocal(DEEPSEEK_PEAK_WINDOWS, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="DeepSeek API Peak Hours" /></div>
-            </div>
-          )}
-          {visibleServices.includes("xiaomi") && (
-            <div className="flex flex-col">
-              <div className="flex flex-1"><StatusCard status={statuses.xiaomi} /></div>
-              <div className="mt-4"><Timeline peakRanges={getPeakRangesLocal(16, 24, 0, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="green" label="Xiaomi Bonus Hours" /></div>
-            </div>
-          )}
-        </div>
 
-        <footer className="mt-12 text-center text-xs text-zinc-500">
-          <p>
-            Information may be inaccurate or outdated. For the most accurate data, please visit the official service websites.
-          </p>
-          <p className="mt-1">
-            The above figures are estimates. Actual available usage may vary depending on project complexity, repository size, and whether auto-accept is enabled.
-          </p>
-          <p className="mt-1">
-            DeepSeek treats Chinese public holidays as off-peak. This tracker does not check holiday dates. See the <a className="underline" href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noopener noreferrer">official pricing schedule</a>.
-          </p>
-          <div className="mt-4 flex items-center justify-center gap-4 flex-wrap">
-            <div className="relative" ref={filterRef}>
-              <button
-                onClick={() => setShowFilterMenu(!showFilterMenu)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors ${
-                  visibleServices.length < ALL_SERVICES.length || !showBestTime
-                    ? 'bg-accent/15 border border-accent/30 text-accent-text'
-                    : 'bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                {visibleServices.length < ALL_SERVICES.length || !showBestTime ? 'Filtered' : 'Filter'}
-              </button>
-              {showFilterMenu && (
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-700 p-2 min-w-[180px] z-50">
-                  <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer border-b border-zinc-200 dark:border-zinc-700 mb-1">
-                    <input
-                      type="checkbox"
-                      checked={showBestTime}
-                      onChange={() => setShowBestTime(!showBestTime)}
-                      className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-accent focus:ring-accent"
-                    />
-                    <span className="text-sm font-medium text-accent-text">Best Time to Use</span>
-                  </label>
-                  {[
-                    { key: "glm53" as const, label: "GLM-5.3" },
-                    { key: "glm53Flash" as const, label: "GLM-5.3-Flash" },
-                    { key: "deepseek" as const, label: "DeepSeek API" },
-                    { key: "xiaomi" as const, label: "Xiaomi" },
-                  ].map((service) => (
-                    <label
-                      key={service.key}
-                      className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer"
-                    >
+            <div className="dashboard-actions">
+              <div className="dashboard-tools" ref={filterRef}>
+                <button
+                  onClick={() => setShowFilterMenu(!showFilterMenu)}
+                  className={`dashboard-action ${isFiltered ? "dashboard-action--active" : ""}`}
+                  aria-expanded={showFilterMenu}
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  {isFiltered ? "Filtered" : "Filter"}
+                </button>
+                {showFilterMenu && (
+                  <div className="filter-menu">
+                    <label className="filter-option filter-option--featured">
                       <input
                         type="checkbox"
-                        checked={visibleServices.includes(service.key)}
-                        onChange={() => toggleService(service.key)}
-                        className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-accent focus:ring-accent"
+                        checked={showBestTime}
+                        onChange={() => setShowBestTime(!showBestTime)}
+                        className="h-4 w-4 rounded border-zinc-300 text-accent focus:ring-accent"
                       />
-                      <span className="text-sm text-zinc-700 dark:text-zinc-300">{service.label}</span>
+                      <span>Best time to use</span>
                     </label>
-                  ))}
-                </div>
-              )}
+                    {[
+                      { key: "glm53" as const, label: "GLM-5.3" },
+                      { key: "glm53Flash" as const, label: "GLM-5.3-Flash" },
+                      { key: "deepseek" as const, label: "DeepSeek API" },
+                      { key: "xiaomi" as const, label: "Xiaomi" },
+                    ].map((service) => (
+                      <label key={service.key} className="filter-option">
+                        <input
+                          type="checkbox"
+                          checked={visibleServices.includes(service.key)}
+                          onChange={() => toggleService(service.key)}
+                          className="h-4 w-4 rounded border-zinc-300 text-accent focus:ring-accent"
+                        />
+                        <span>{service.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => {
+                  setWidgetPreviewServices(visibleServices);
+                  setShowWidgetModal(true);
+                }}
+                className="dashboard-action dashboard-action--primary"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                Get widget
+              </button>
             </div>
-            <button
-              onClick={() => {
-                setWidgetPreviewServices(visibleServices);
-                setShowWidgetModal(true);
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/15 border border-accent/30 text-accent-text hover:bg-accent/25 transition-colors cursor-pointer"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-              Get Widget
-            </button>
-            <span className="text-zinc-400">Built by{" "}
+          </div>
+
+          {services.length > 0 ? (
+            <div className={`service-grid service-grid--overview ${services.length === 4 ? "service-grid--four" : ""} ${services.length === 1 ? "service-grid--single" : ""}`}>
+              {services.map(({ key, ...service }) => (
+                <ServicePanel key={key} {...service} />
+              ))}
+            </div>
+          ) : (
+            <p className="empty-state">No services selected. Open Filter to choose what to show.</p>
+          )}
+        </section>
+
+        <footer className="dashboard-footer">
+          <div className="footer-notes">
+            <p>Information may be inaccurate or outdated. For the most accurate data, visit the official service websites.</p>
+            <p>The above figures are estimates. Actual available usage may vary depending on project complexity, repository size, and whether auto-accept is enabled.</p>
+            <p>DeepSeek treats Chinese public holidays as off-peak. This tracker does not check holiday dates. See the <a href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noopener noreferrer">official pricing schedule</a>.</p>
+          </div>
+          <p className="footer-credit">
+            Built by{" "}
               <a
                 href="https://www.omeraltinova.com.tr/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-accent-text hover:text-accent transition-colors"
               >
                 Faruk
               </a>
-            </span>
-          </div>
+          </p>
         </footer>
 
         {showWidgetModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowWidgetModal(false)}>
-            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col md:flex-row" onClick={(e) => e.stopPropagation()}>
-              {/* Left Side - Controls */}
-              <div className="w-full md:w-1/2 p-6 border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-700 overflow-y-auto">
+          <div className="widget-modal-overlay" onClick={() => setShowWidgetModal(false)}>
+            <div className="widget-modal" role="dialog" aria-modal="true" aria-labelledby="widget-modal-title" onClick={(e) => e.stopPropagation()}>
+              <div className="widget-modal-controls">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Embed Widget</h3>
-                  <button onClick={() => setShowWidgetModal(false)} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+                  <h3 id="widget-modal-title" className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Embed widget</h3>
+                  <button onClick={() => setShowWidgetModal(false)} className="widget-modal-close" aria-label="Close widget dialog">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -377,10 +346,9 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                 </div>
               </div>
 
-              {/* Right Side - Preview */}
-              <div className="w-full md:w-1/2 bg-zinc-50 dark:bg-zinc-950 p-6">
+              <div className="widget-modal-preview">
                 <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
-                  Live Preview ({widgetWidth} Ã— {widgetHeight}):
+                  Live preview ({widgetWidth} × {widgetHeight}):
                 </p>
                 <div className="rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 mx-auto" style={{ width: widgetWidth.includes('px') ? widgetWidth : '100%', height: widgetHeight.includes('%') || widgetHeight === 'auto' ? widgetHeight : `${widgetHeight}px`, maxWidth: '100%' }}>
                   {typeof window !== "undefined" && (
@@ -401,7 +369,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
             </div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
@@ -422,7 +390,7 @@ export default function Home() {
   return (
     <ErrorBoundary>
       <Suspense fallback={
-        <div className="flex min-h-screen items-center justify-center dark-grid-bg">
+        <div className="dashboard-loading">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-700 border-t-accent-text" />
         </div>
       }>

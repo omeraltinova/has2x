@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Palette, Sun, Moon, Check } from "lucide-react";
-import { useTheme, type ThemeMode, type ThemePalette } from "@/lib/useTheme";
+import { useTheme, type ThemePalette } from "@/lib/useTheme";
 
 export function ThemeSelector() {
   const { themeMode, themePalette, setMode, setPalette } = useTheme();
@@ -27,25 +27,26 @@ export function ThemeSelector() {
   ];
 
   return (
-    <div className="fixed top-4 right-4 z-50" ref={containerRef}>
+    <div className="relative z-50" ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center p-2.5 rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 hover:bg-zinc-150 dark:hover:bg-zinc-800 hover:scale-105 active:scale-95 shadow-lg shadow-zinc-200/20 dark:shadow-black/20 transition-all duration-200 cursor-pointer"
+        className="theme-trigger"
         aria-label="Customize theme"
+        aria-expanded={isOpen}
       >
         <Palette className="w-5 h-5 text-accent-text transition-colors duration-200" />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-64 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-lg border border-zinc-200/60 dark:border-zinc-800/60 p-4 shadow-xl shadow-zinc-200/30 dark:shadow-black/40 animate-in fade-in slide-in-from-top-3 duration-250 z-50">
-          <h3 className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-3">
-            Theme Customizer
+        <div className="theme-menu">
+          <h3 className="theme-menu-title">
+            Appearance
           </h3>
 
           {/* Theme Mode Section */}
           <div className="mb-4">
             <span className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2">
-              Appearance
+              Mode
             </span>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -76,7 +77,7 @@ export function ThemeSelector() {
           {/* Theme Palette Section */}
           <div>
             <span className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2">
-              Color Accent
+              Color palette
             </span>
             <div className="flex flex-col gap-1">
               {palettes.map((p) => {

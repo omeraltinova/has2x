@@ -28,7 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
       return (
-        <div className="flex min-h-screen items-center justify-center dark-grid-bg">
+        <div className="dashboard-shell flex min-h-screen items-center justify-center p-4">
           <div className="max-w-md mx-auto p-6 rounded-2xl border-2 border-red-500/40 bg-red-500/5 text-center">
             <svg
               className="w-12 h-12 text-red-500 mx-auto mb-4"
