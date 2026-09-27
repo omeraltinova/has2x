@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, Suspense } from "react";
+import { useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 import {
@@ -85,18 +85,14 @@ function getProviderServiceCards(
 function ProviderServicesSection({
   providerKey,
   serviceCards,
-  isOutgoing = false,
 }: {
   providerKey: ProviderKey;
   serviceCards: ProviderServiceCard[];
-  isOutgoing?: boolean;
 }) {
   return (
     <section
-      className={`services-section provider-services-section${isOutgoing ? " provider-services-section--exit" : ""}`}
+      className="services-section provider-services-section"
       aria-labelledby={`provider-services-heading-${providerKey}`}
-      aria-hidden={isOutgoing || undefined}
-      inert={isOutgoing}
     >
       <div className="section-heading">
         <div>
@@ -116,22 +112,9 @@ function ProviderServicesSection({
 
 function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
   const provider = PROVIDERS[providerKey];
-  const { statuses, providerTransition, finishProviderTransition } = useDashboardState();
+  const { statuses } = useDashboardState();
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
   const isHydrated = useHasHydrated();
-  const outgoingProvider = providerTransition?.to === providerKey ? providerTransition.from : null;
-
-  useEffect(() => {
-    if (!outgoingProvider) return;
-
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const timeoutId = window.setTimeout(
-      () => finishProviderTransition(providerKey),
-      prefersReducedMotion ? 420 : 700,
-    );
-
-    return () => window.clearTimeout(timeoutId);
-  }, [finishProviderTransition, outgoingProvider, providerKey]);
 
   if (!isHydrated || !statuses) {
     return (
@@ -153,24 +136,13 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
           title={provider.name}
           description={provider.description}
           timezone={timezone}
-          outgoingProvider={outgoingProvider}
         />
 
-        <div className={`provider-transition-stage${outgoingProvider ? " provider-transition-stage--active" : ""}`}>
-          {outgoingProvider && (
-            <ProviderServicesSection
-              key={`outgoing-${outgoingProvider}`}
-              providerKey={outgoingProvider}
-              serviceCards={getProviderServiceCards(outgoingProvider, statuses, scheduleNow, currentHour)}
-              isOutgoing
-            />
-          )}
-          <ProviderServicesSection
-            key={`current-${providerKey}`}
-            providerKey={providerKey}
-            serviceCards={serviceCards}
-          />
-        </div>
+        <ProviderServicesSection
+          key={providerKey}
+          providerKey={providerKey}
+          serviceCards={serviceCards}
+        />
 
         <footer className="dashboard-footer">
           <div className="footer-notes">

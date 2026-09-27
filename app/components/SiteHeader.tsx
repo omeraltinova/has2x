@@ -1,24 +1,24 @@
 import { Clock3 } from "lucide-react";
-import { PROVIDERS, type ProviderKey } from "@/lib/services";
+import Link from "next/link";
+import type { ProviderKey } from "@/lib/services";
 import { ThemeSelector } from "@/app/components/ThemeSelector";
-import { OverviewLink, ProviderNavigation } from "@/app/components/ProviderNavigation";
+import { ProviderNavigation } from "@/app/components/ProviderNavigation";
 
 type SiteHeaderProps = {
   activeProvider: ProviderKey | null;
   title: string;
   description: string;
   timezone: string;
-  outgoingProvider?: ProviderKey | null;
 };
 
-export function SiteHeader({ activeProvider, title, description, timezone, outgoingProvider = null }: SiteHeaderProps) {
+export function SiteHeader({ activeProvider, title, description, timezone }: SiteHeaderProps) {
   return (
     <header className="site-header">
       <div className="site-topbar">
         <div className="site-brand-lockup">
-          <OverviewLink className="site-brand" current={false} ariaLabel="has2x overview">
+          <Link href="/" className="site-brand" aria-label="has2x overview">
             has<span className="site-brand-accent">2x</span>
-          </OverviewLink>
+          </Link>
           <span className="site-brand-context">AI service usage</span>
         </div>
 
@@ -33,19 +33,8 @@ export function SiteHeader({ activeProvider, title, description, timezone, outgo
 
       <ProviderNavigation activeProvider={activeProvider} />
 
-      <div className={`site-intro${outgoingProvider ? " site-intro--transitioning" : ""}`}>
-        {outgoingProvider && (
-          <div
-            key={`outgoing-${outgoingProvider}`}
-            className="site-intro-content site-intro-content--exit"
-            aria-hidden="true"
-            inert
-          >
-            <h1>{PROVIDERS[outgoingProvider].name}</h1>
-            <p>{PROVIDERS[outgoingProvider].description}</p>
-          </div>
-        )}
-        <div key={activeProvider ?? "overview"} className="site-intro-content site-intro-content--enter">
+      <div className="site-intro">
+        <div key={activeProvider ?? "overview"}>
           <h1>{title}</h1>
           <p>{description}</p>
         </div>
