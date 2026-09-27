@@ -14,6 +14,7 @@ type DashboardState = {
   providerTransition: ProviderTransition | null;
   beginProviderTransition: (from: ProviderKey, to: ProviderKey) => void;
   clearProviderTransition: () => void;
+  finishProviderTransition: (to: ProviderKey) => void;
 };
 
 const DashboardStateContext = createContext<DashboardState | null>(null);
@@ -26,6 +27,9 @@ export function DashboardStateProvider({ children }: { children: React.ReactNode
     if (from !== to) setProviderTransition({ from, to });
   }, []);
   const clearProviderTransition = useCallback(() => setProviderTransition(null), []);
+  const finishProviderTransition = useCallback((to: ProviderKey) => {
+    setProviderTransition((current) => current?.to === to ? null : current);
+  }, []);
 
   useEffect(() => {
     if (!providerTransition) return;
@@ -35,14 +39,14 @@ export function DashboardStateProvider({ children }: { children: React.ReactNode
       setProviderTransition((current) => (
         current?.from === providerTransition.from && current.to === providerTransition.to ? null : current
       ));
-    }, prefersReducedMotion ? 220 : 500);
+    }, prefersReducedMotion ? 1000 : 2000);
 
     return () => window.clearTimeout(timeoutId);
   }, [providerTransition]);
 
   return (
     <DashboardStateContext.Provider
-      value={{ statuses, providerTransition, beginProviderTransition, clearProviderTransition }}
+      value={{ statuses, providerTransition, beginProviderTransition, clearProviderTransition, finishProviderTransition }}
     >
       {children}
     </DashboardStateContext.Provider>

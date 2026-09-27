@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, Suspense } from "react";
+import { useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 import {
@@ -116,10 +116,22 @@ function ProviderServicesSection({
 
 function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
   const provider = PROVIDERS[providerKey];
-  const { statuses, providerTransition } = useDashboardState();
+  const { statuses, providerTransition, finishProviderTransition } = useDashboardState();
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
   const isHydrated = useHasHydrated();
   const outgoingProvider = providerTransition?.to === providerKey ? providerTransition.from : null;
+
+  useEffect(() => {
+    if (!outgoingProvider) return;
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timeoutId = window.setTimeout(
+      () => finishProviderTransition(providerKey),
+      prefersReducedMotion ? 420 : 700,
+    );
+
+    return () => window.clearTimeout(timeoutId);
+  }, [finishProviderTransition, outgoingProvider, providerKey]);
 
   if (!isHydrated || !statuses) {
     return (

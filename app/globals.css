@@ -592,8 +592,13 @@ body {
   grid-area: 1 / 1;
 }
 
+.site-intro--transitioning .site-intro-content--enter {
+  animation-delay: 240ms;
+  animation-duration: 360ms;
+}
+
 .site-intro-content--exit {
-  animation: provider-intro-depart 340ms cubic-bezier(0.4, 0, 0.8, 0.2) both !important;
+  animation: provider-intro-depart 220ms cubic-bezier(0.4, 0, 0.8, 0.2) both !important;
   pointer-events: none;
 }
 
@@ -975,7 +980,7 @@ body {
 
 @keyframes provider-intro-arrive {
   from {
-    opacity: 0.68;
+    opacity: 0;
     transform: translate3d(var(--provider-intro-offset), 0, 0);
   }
   to {
@@ -1170,6 +1175,13 @@ body {
   .provider-transition-stage--active .provider-services-section--exit,
   .site-intro-content--exit {
     animation-name: provider-content-depart-reduced !important;
+    animation-duration: 180ms !important;
+    animation-timing-function: ease-out !important;
+  }
+
+  .site-intro--transitioning .site-intro-content--enter {
+    animation-name: provider-intro-arrive !important;
+    animation-delay: 200ms !important;
     animation-duration: 180ms !important;
     animation-timing-function: ease-out !important;
   }
