@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Info, Bot, Cpu, Sparkles, MessageSquare, Zap, Smartphone } from "lucide-react";
+import { Info, Cpu, Sparkles, Zap, Smartphone } from "lucide-react";
 import type { ServiceStatus } from "@/lib/services";
 
 export function WidgetCard({ status }: { status: ServiceStatus }) {
@@ -56,23 +56,18 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
   }[status.statusColor];
 
   const getLimitText = () => {
-    if (status.name.startsWith("Claude")) {
-      return status.multiplier === "↓" ? "reduced limits" : "normal limits";
-    }
+    if (status.rateUnit) return status.rateUnit;
     return status.isBonus ? "bonus limits" : "usage count";
   };
 
   const getServiceIcon = (name: string) => {
     switch (name) {
-      case "Claude":
-      case "Claude Code":
-        return <Bot className={`w-5 h-5 ${colorStyles.icon}`} />;
-      case "Codex":
-        return <MessageSquare className={`w-5 h-5 ${colorStyles.icon}`} />;
-      case "GLM-5.1 / 5.2":
+      case "GLM-5.3":
         return <Sparkles className={`w-5 h-5 ${colorStyles.icon}`} />;
-      case "GLM-5-Turbo":
+      case "GLM-5.3-Flash":
         return <Zap className={`w-5 h-5 ${colorStyles.icon}`} />;
+      case "DeepSeek API":
+        return <Cpu className={`w-5 h-5 ${colorStyles.icon}`} />;
       case "Xiaomi":
         return <Smartphone className={`w-5 h-5 ${colorStyles.icon}`} />;
       default:

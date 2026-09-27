@@ -45,14 +45,14 @@ export default function OGImage() {
               position: "relative",
             }}
           >
-            <span style={{ fontSize: 58, fontWeight: 800, color: "#a78bfa", opacity: 0.45, letterSpacing: "-0.02em", transform: "scale(0.95)" }}>
-              Codex
-            </span>
-            <span style={{ fontSize: 88, fontWeight: 800, color: "#fb923c", letterSpacing: "-0.02em" }}>
-              Claude Code
-            </span>
             <span style={{ fontSize: 58, fontWeight: 800, color: "#22d3ee", opacity: 0.45, letterSpacing: "-0.02em", transform: "scale(0.95)" }}>
-              GLM
+              GLM-5.3
+            </span>
+            <span style={{ fontSize: 80, fontWeight: 800, color: "#60a5fa", letterSpacing: "-0.02em" }}>
+              DeepSeek API
+            </span>
+            <span style={{ fontSize: 58, fontWeight: 800, color: "#facc15", opacity: 0.45, letterSpacing: "-0.02em", transform: "scale(0.95)" }}>
+              Xiaomi
             </span>
           </div>
           <span

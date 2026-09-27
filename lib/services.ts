@@ -1,4 +1,4 @@
-export type ProviderKey = "claude" | "codex" | "glm" | "xiaomi";
+export type ProviderKey = "glm" | "deepseek" | "xiaomi";
 
 export const PROVIDERS: Record<ProviderKey, {
   name: string;
@@ -6,23 +6,17 @@ export const PROVIDERS: Record<ProviderKey, {
   color: string;
   description: string;
 }> = {
-  claude: {
-    name: "Claude Code",
-    services: ["claude"],
-    color: "orange",
-    description: "Anthropic's Claude Code limits",
-  },
-  codex: {
-    name: "Codex",
-    services: ["codex"],
-    color: "green",
-    description: "OpenAI's coding model",
-  },
   glm: {
     name: "GLM",
-    services: ["glm51", "glm5Turbo"],
+    services: ["glm53", "glm53Flash"],
     color: "cyan",
     description: "Zhipu AI's model family",
+  },
+  deepseek: {
+    name: "DeepSeek API",
+    services: ["deepseek"],
+    color: "blue",
+    description: "DeepSeek API peak and off-peak pricing",
   },
   xiaomi: {
     name: "Xiaomi",
@@ -40,168 +34,156 @@ export type ServiceStatus = {
   statusColor: "green" | "red" | "orange" | "gray";
   nextChangeAt: Date | null;
   nextChangeLabel: string;
-  promotionEnd: Date;
-  promotionExpired: boolean;
   peakHoursLocal: string;
   description: string;
   details?: string;
+  rateUnit?: string;
 };
 
-// Claude Code: Anthropic removed peak-hour limit reductions for Pro/Max accounts.
-// This does not describe regular Claude chat or API limits.
-export function getClaudeStatus(now: Date): ServiceStatus {
-  void now;
+export type PeakRange = {
+  startHour: number;
+  endHour: number;
+};
 
-  return {
-    name: "Claude Code",
-    multiplier: "1×",
-    isBonus: true,
-    statusLabel: "No Peak Reduction",
-    statusColor: "green",
-    nextChangeAt: null,
-    nextChangeLabel: "",
-    promotionEnd: new Date("2099-12-31"),
-    promotionExpired: false,
-    peakHoursLocal: "None — removed for Claude Code Pro/Max",
-    description: "Claude Code no longer has reduced five-hour limits during peak hours for Pro and Max accounts.",
-    details: "Claude Code only. Anthropic removed peak-hour limit reductions for Pro and Max accounts on May 6, 2026; Claude chat and API limits may differ.",
-  };
+export const GLM_PEAK_WINDOWS: PeakRange[] = [{ startHour: 14, endHour: 18 }];
+export const DEEPSEEK_PEAK_WINDOWS: PeakRange[] = [
+  { startHour: 9, endHour: 12 },
+  { startHour: 14, endHour: 18 },
+];
+
+const SINGAPORE_OFFSET_HOURS = 8;
+const SINGAPORE_OFFSET_MS = SINGAPORE_OFFSET_HOURS * 60 * 60 * 1000;
+
+function isSingaporeWeekday(now: Date): boolean {
+  const singaporeTime = new Date(now.getTime() + SINGAPORE_OFFSET_MS);
+  const day = singaporeTime.getUTCDay();
+  return day >= 1 && day <= 5;
 }
 
-// GPT: 2x all the time until May 31, 2026 (Pro subscriptions only)
-export function getGPTStatus(now: Date): ServiceStatus {
-  const promotionEnd = new Date("2026-05-31T23:59:59Z");
-  const promotionExpired = now >= promotionEnd;
+function getPeakWindowState(now: Date, windows: PeakRange[]) {
+  const singaporeTime = new Date(now.getTime() + SINGAPORE_OFFSET_MS);
+  const hour = singaporeTime.getUTCHours();
+  const isWeekday = isSingaporeWeekday(now);
+  const activeWindow = isWeekday
+    ? windows.find((window) => hour >= window.startHour && hour < window.endHour)
+    : undefined;
 
-  if (promotionExpired) {
-    return {
-      name: "Codex",
-      multiplier: "1×",
-      isBonus: false,
-      statusLabel: "Promotion Ended",
-      statusColor: "gray",
-      nextChangeAt: null,
-      nextChangeLabel: "",
-      promotionEnd,
-      promotionExpired: true,
-      peakHoursLocal: "",
-      description: "2x Pro promotion ended on May 31.",
-      details: "OpenAI's ChatGPT/Codex. The 2× Pro promotion has ended. Normal usage rates now apply.",
-    };
-  }
-
-  return {
-    name: "Codex",
-    multiplier: "2×",
-    isBonus: true,
-    statusLabel: "2× Limit Active!",
-    statusColor: "green",
-    nextChangeAt: promotionEnd,
-    nextChangeLabel: "Promotion ends in",
-    promotionEnd,
-    promotionExpired: false,
-    peakHoursLocal: `None — 24/7 active until May 31`,
-    description: `2× usage around the clock for Pro subs. Valid until May 31, 2026.`,
-    details: "OpenAI's ChatGPT/Codex. Currently offering 2× message allowance 24/7 for Pro subscriptions only. No peak hours during this promotion.",
-  };
-}
-
-// GLM-5.1 / 5.2: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 1× (through end of September), then 2×
-//   (GLM-5.2 shares the same usage rules as GLM-5.1, so they are tracked as one card.)
-// GLM-5-Turbo: Peak 14:00-18:00 UTC+8 = 3×, Off-peak = 1× (through end of September), then 2×
-export function getGLMStatus(now: Date): {
-  glm51: ServiceStatus;
-  glm5Turbo: ServiceStatus;
-} {
-  const turboPromoEnd = new Date("2026-09-30T23:59:59+08:00");
-
-  const utc8Offset = 8;
-  const utc8Time = new Date(now.getTime() + utc8Offset * 60 * 60 * 1000);
-  const utc8Hour = utc8Time.getUTCHours();
-
-  const isPeak = utc8Hour >= 14 && utc8Hour < 18;
-
-  // Next change
-  let nextChangeAt: Date;
-  if (isPeak) {
-    // Peak ends at 18:00 UTC+8
-    const next = new Date(utc8Time);
-    next.setUTCHours(18, 0, 0, 0);
-    nextChangeAt = new Date(next.getTime() - utc8Offset * 60 * 60 * 1000);
-  } else if (utc8Hour < 14) {
-    // Before peak
-    const next = new Date(utc8Time);
-    next.setUTCHours(14, 0, 0, 0);
-    nextChangeAt = new Date(next.getTime() - utc8Offset * 60 * 60 * 1000);
+  let nextSingaporeTime: Date;
+  if (activeWindow) {
+    nextSingaporeTime = new Date(singaporeTime);
+    nextSingaporeTime.setUTCHours(activeWindow.endHour, 0, 0, 0);
   } else {
-    // After peak (18+), next peak is tomorrow
-    const next = new Date(utc8Time);
-    next.setUTCDate(next.getUTCDate() + 1);
-    next.setUTCHours(14, 0, 0, 0);
-    nextChangeAt = new Date(next.getTime() - utc8Offset * 60 * 60 * 1000);
+    const nextWindow = isWeekday
+      ? windows.find((window) => hour < window.startHour)
+      : undefined;
+
+    if (nextWindow) {
+      nextSingaporeTime = new Date(singaporeTime);
+      nextSingaporeTime.setUTCHours(nextWindow.startHour, 0, 0, 0);
+    } else {
+      nextSingaporeTime = new Date(Date.UTC(
+        singaporeTime.getUTCFullYear(),
+        singaporeTime.getUTCMonth(),
+        singaporeTime.getUTCDate()
+      ));
+      do {
+        nextSingaporeTime.setUTCDate(nextSingaporeTime.getUTCDate() + 1);
+      } while (nextSingaporeTime.getUTCDay() === 0 || nextSingaporeTime.getUTCDay() === 6);
+      nextSingaporeTime.setUTCHours(windows[0].startHour, 0, 0, 0);
+    }
   }
 
-  const peakStartLocal = formatHourInLocal(14, utc8Offset, now);
-  const peakEndLocal = formatHourInLocal(18, utc8Offset, now);
-  const peakHoursLocal = `${peakStartLocal} – ${peakEndLocal}`;
+  return {
+    isPeak: Boolean(activeWindow),
+    nextChangeAt: new Date(nextSingaporeTime.getTime() - SINGAPORE_OFFSET_MS),
+  };
+}
 
-  const turboOffPeakExpired = now >= turboPromoEnd;
+function createScheduledStatus({
+  name,
+  isPeak,
+  peakMultiplier,
+  offPeakMultiplier,
+  rateUnit,
+  peakHoursLocal,
+  nextChangeAt,
+  peakDescription,
+  offPeakDescription,
+  details,
+}: {
+  name: string;
+  isPeak: boolean;
+  peakMultiplier: string;
+  offPeakMultiplier: string;
+  rateUnit: string;
+  peakHoursLocal: string;
+  nextChangeAt: Date;
+  peakDescription: string;
+  offPeakDescription: string;
+  details: string;
+}): ServiceStatus {
+  const multiplier = isPeak ? peakMultiplier : offPeakMultiplier;
 
-  const turboMultiplier = isPeak ? "3×" : turboOffPeakExpired ? "2×" : "1×";
-  const turboIsBonus = !isPeak && !turboOffPeakExpired;
-
-  const glm5Turbo: ServiceStatus = {
-    name: "GLM-5-Turbo",
-    multiplier: turboMultiplier,
-    isBonus: turboIsBonus,
-    statusLabel: isPeak
-      ? "Peak — 3× Usage"
-      : turboOffPeakExpired
-        ? "Off-Peak — 2× Usage"
-        : "Off-Peak — 1× Usage ⭐",
-    statusColor: isPeak ? "red" : turboOffPeakExpired ? "orange" : "green",
+  return {
+    name,
+    multiplier,
+    isBonus: !isPeak,
+    statusLabel: `${isPeak ? "Peak" : "Off-peak"} — ${multiplier} ${rateUnit}`,
+    statusColor: isPeak ? "red" : "green",
     nextChangeAt,
     nextChangeLabel: isPeak ? "Off-peak starts in" : "Peak starts in",
-    promotionEnd: turboPromoEnd,
-    promotionExpired: turboOffPeakExpired,
     peakHoursLocal,
-    description: turboOffPeakExpired
-      ? "Peak: 3× consumption, Off-peak: 2×."
-      : "Peak: 3× consumption, Off-peak: 1× (through end of September).",
-    details: turboOffPeakExpired
-      ? "Zhipu AI's GLM-5-Turbo. Peak: 3× consumption, Off-peak: 2×."
-      : "Zhipu AI's GLM-5-Turbo. Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak: 1× until end of September, then 2×.",
+    description: isPeak ? peakDescription : offPeakDescription,
+    details,
+    rateUnit,
   };
+}
 
-  const glm51PromoEnd = new Date("2026-09-30T23:59:59+08:00");
-  const glm51OffPeakExpired = now >= glm51PromoEnd;
-  const glm51Multiplier = isPeak ? "3×" : glm51OffPeakExpired ? "2×" : "1×";
-  const glm51IsBonus = !isPeak && !glm51OffPeakExpired;
+export function getGLMStatus(now: Date): {
+  glm53: ServiceStatus;
+  glm53Flash: ServiceStatus;
+} {
+  const { isPeak, nextChangeAt } = getPeakWindowState(now, GLM_PEAK_WINDOWS);
+  const peakHoursLocal = "Mon–Fri, 14:00–18:00 SGT (UTC+8)";
+  const common = { isPeak, peakHoursLocal, nextChangeAt, rateUnit: "quota use" };
 
-  const glm51: ServiceStatus = {
-    name: "GLM-5.1 / 5.2",
-    multiplier: glm51Multiplier,
-    isBonus: glm51IsBonus,
-    statusLabel: isPeak
-      ? "Peak — 3× Usage"
-      : glm51OffPeakExpired
-        ? "Off-Peak — 2× Usage"
-        : "Off-Peak — 1× Usage ⭐",
-    statusColor: isPeak ? "red" : glm51OffPeakExpired ? "orange" : "green",
+  return {
+    glm53: createScheduledStatus({
+      ...common,
+      name: "GLM-5.3",
+      peakMultiplier: "3×",
+      offPeakMultiplier: "1×",
+      peakDescription: "API calls consume quota at a rate of 3 during peak hours.",
+      offPeakDescription: "API calls consume quota at a rate of 1 during off-peak hours.",
+      details: "GLM-5.3 is the flagship model. API calls use 1× quota off-peak and 3× during peak hours.",
+    }),
+    glm53Flash: createScheduledStatus({
+      ...common,
+      name: "GLM-5.3-Flash",
+      peakMultiplier: "1.2×",
+      offPeakMultiplier: "0.4×",
+      peakDescription: "API calls consume quota at a rate of 1.2 during peak hours.",
+      offPeakDescription: "API calls consume quota at a rate of 0.4 during off-peak hours.",
+      details: "GLM-5.3-Flash API calls use 0.4× quota off-peak and 1.2× during peak hours.",
+    }),
+  };
+}
+
+export function getDeepSeekStatus(now: Date): ServiceStatus {
+  const { isPeak, nextChangeAt } = getPeakWindowState(now, DEEPSEEK_PEAK_WINDOWS);
+
+  return createScheduledStatus({
+    name: "DeepSeek API",
+    isPeak,
+    peakMultiplier: "2×",
+    offPeakMultiplier: "1×",
+    rateUnit: "API price",
+    peakHoursLocal: "Mon–Fri, 09:00–12:00 and 14:00–18:00 SGT (UTC+8)",
     nextChangeAt,
-    nextChangeLabel: isPeak ? "Off-peak starts in" : "Peak starts in",
-    promotionEnd: glm51PromoEnd,
-    promotionExpired: glm51OffPeakExpired,
-    peakHoursLocal,
-    description: glm51OffPeakExpired
-      ? "Peak: 3× consumption, Off-peak: 2×."
-      : "Peak: 3× consumption, Off-peak: 1× (through end of September).",
-    details: glm51OffPeakExpired
-      ? "Zhipu AI's GLM-5.1 and GLM-5.2 (same usage rules). Peak: 3× consumption, Off-peak: 2×."
-      : "Zhipu AI's GLM-5.1 and GLM-5.2 (same usage rules). Peak hours: 2PM-6PM Beijing time. During peak, messages count as 3×. Off-peak: 1× until end of September, then 2×.",
-  };
-
-  return { glm51, glm5Turbo };
+    peakDescription: "Peak-hour API prices are twice the off-peak rates.",
+    offPeakDescription: "Off-peak API prices are half the peak rates.",
+    details: "DeepSeek's official pricing sets off-peak rates at half the peak rates. Chinese public holidays are off-peak all day. This tracker does not check holiday dates.",
+  });
 }
 
 // Xiaomi token plan: 0.8× consumption between 16:00–24:00 UTC, 1× otherwise.
@@ -232,8 +214,6 @@ export function getXiaomiStatus(now: Date): ServiceStatus {
     statusColor: isBonus ? "green" : "red",
     nextChangeAt,
     nextChangeLabel: isBonus ? "Bonus ends in" : "Bonus starts in",
-    promotionEnd: new Date("2099-12-31"),
-    promotionExpired: false,
     peakHoursLocal: `${startLocal} – ${endLocal}`,
     description: isBonus
       ? "Bonus window: 0.8× consumption. Outside the window: 1×."
@@ -271,11 +251,6 @@ export function formatCountdown(ms: number): string {
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
 
-export type PeakRange = {
-  startHour: number;
-  endHour: number;
-};
-
 export function getPeakRangesLocal(
   sourceStartHour: number,
   sourceEndHour: number,
@@ -307,6 +282,14 @@ export function getPeakRangesLocal(
   return ranges;
 }
 
+export function getWeekdayPeakRangesLocal(windows: PeakRange[], now: Date): PeakRange[] {
+  if (!isSingaporeWeekday(now)) return [];
+
+  return windows.flatMap(({ startHour, endHour }) =>
+    getPeakRangesLocal(startHour, endHour, SINGAPORE_OFFSET_HOURS, now)
+  );
+}
+
 export function getCurrentLocalHour(now: Date): number {
   return now.getHours();
 }
@@ -331,19 +314,18 @@ export type BestTimeRecommendation = {
 };
 
 export function getBestTimeRecommendation(
-  claude: ServiceStatus,
-  gpt: ServiceStatus,
-  glm51: ServiceStatus,
-  glm5Turbo: ServiceStatus,
+  glm53: ServiceStatus,
+  glm53Flash: ServiceStatus,
+  deepseek: ServiceStatus,
   xiaomi: ServiceStatus
 ): BestTimeRecommendation {
-  const services: BestTimeService[] = [
-    { name: claude.name, multiplier: claude.multiplier, isBonus: claude.isBonus, isBest: claude.isBonus },
-    { name: gpt.name, multiplier: gpt.multiplier, isBonus: gpt.isBonus, isBest: gpt.isBonus },
-    { name: glm51.name, multiplier: glm51.multiplier, isBonus: glm51.isBonus, isBest: glm51.isBonus },
-    { name: glm5Turbo.name, multiplier: glm5Turbo.multiplier, isBonus: glm5Turbo.isBonus, isBest: glm5Turbo.isBonus },
-    { name: xiaomi.name, multiplier: xiaomi.multiplier, isBonus: xiaomi.isBonus, isBest: xiaomi.isBonus },
-  ];
+  const statuses = [glm53, glm53Flash, deepseek, xiaomi];
+  const services: BestTimeService[] = statuses.map((status) => ({
+    name: status.name,
+    multiplier: status.multiplier,
+    isBonus: status.isBonus,
+    isBest: status.isBonus,
+  }));
 
   const nowBestServices = services.filter((s) => s.isBest);
   const isAllOptimal = services.every((s) => s.isBest);
@@ -353,23 +335,9 @@ export function getBestTimeRecommendation(
 
   if (!isAllOptimal) {
     const now = new Date();
-    const upcoming: { service: string; nextChange: Date }[] = [];
-
-    if (!claude.isBonus && claude.nextChangeAt) {
-      upcoming.push({ service: claude.name, nextChange: claude.nextChangeAt });
-    }
-    if (!gpt.isBonus && gpt.nextChangeAt) {
-      upcoming.push({ service: gpt.name, nextChange: gpt.nextChangeAt });
-    }
-    if (!glm51.isBonus && glm51.nextChangeAt) {
-      upcoming.push({ service: glm51.name, nextChange: glm51.nextChangeAt });
-    }
-    if (!glm5Turbo.isBonus && glm5Turbo.nextChangeAt) {
-      upcoming.push({ service: glm5Turbo.name, nextChange: glm5Turbo.nextChangeAt });
-    }
-    if (!xiaomi.isBonus && xiaomi.nextChangeAt) {
-      upcoming.push({ service: xiaomi.name, nextChange: xiaomi.nextChangeAt });
-    }
+    const upcoming = statuses
+      .filter((status) => !status.isBonus && status.nextChangeAt)
+      .map((status) => ({ service: status.name, nextChange: status.nextChangeAt! }));
 
     if (upcoming.length > 0) {
       upcoming.sort((a, b) => a.nextChange.getTime() - b.nextChange.getTime());
@@ -389,9 +357,9 @@ export function getBestTimeRecommendation(
     summary = "All services are at their best rates now!";
   } else if (hasAnyBonus) {
     const bestNames = nowBestServices.map((s) => s.name).join(", ");
-    summary = `${bestNames} ${nowBestServices.length === 1 ? "is" : "are"} at bonus rate now!`;
+    summary = `${bestNames} ${nowBestServices.length === 1 ? "has" : "have"} the lower rate now.`;
   } else {
-    summary = "No services are at bonus rates currently.";
+    summary = "No services are at their lower rate right now.";
   }
 
   return {

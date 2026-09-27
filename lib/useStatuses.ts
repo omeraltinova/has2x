@@ -2,19 +2,17 @@
 
 import { useState, useEffect } from "react";
 import {
-  getClaudeStatus,
-  getGPTStatus,
   getGLMStatus,
+  getDeepSeekStatus,
   getXiaomiStatus,
   type ServiceStatus,
 } from "@/lib/services";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 
 export type AllStatuses = {
-  claude: ServiceStatus;
-  gpt: ServiceStatus;
-  glm51: ServiceStatus;
-  glm5Turbo: ServiceStatus;
+  glm53: ServiceStatus;
+  glm53Flash: ServiceStatus;
+  deepseek: ServiceStatus;
   xiaomi: ServiceStatus;
 };
 
@@ -27,11 +25,10 @@ export function useStatuses() {
 
     const update = () => {
       const now = new Date();
-      const claude = getClaudeStatus(now);
-      const gpt = getGPTStatus(now);
-      const { glm51, glm5Turbo } = getGLMStatus(now);
+      const { glm53, glm53Flash } = getGLMStatus(now);
+      const deepseek = getDeepSeekStatus(now);
       const xiaomi = getXiaomiStatus(now);
-      setStatuses({ claude, gpt, glm51, glm5Turbo, xiaomi });
+      setStatuses({ glm53, glm53Flash, deepseek, xiaomi });
     };
 
     update();

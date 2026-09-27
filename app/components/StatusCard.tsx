@@ -100,7 +100,7 @@ export function StatusCard({ status }: { status: ServiceStatus }) {
       {status.peakHoursLocal && (
         <div className="mb-3 rounded-lg bg-zinc-100 dark:bg-zinc-800/50 px-3 py-2">
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Peak Hours (Local)
+            Schedule
           </p>
           <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
             {status.peakHoursLocal}
@@ -117,14 +117,6 @@ export function StatusCard({ status }: { status: ServiceStatus }) {
             className={`text-2xl font-mono font-bold tabular-nums ${multiplierColor}`}
           >
             {countdown}
-          </p>
-        </div>
-      )}
-
-      {status.promotionExpired && (
-        <div className="mt-auto pt-3 border-t border-zinc-200 dark:border-zinc-700/50">
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 italic">
-            Promotion has expired
           </p>
         </div>
       )}

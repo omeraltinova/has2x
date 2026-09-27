@@ -1,6 +1,6 @@
 # has2x — AI Usage Multiplier Tracker
 
-Track AI service usage multipliers in real time. has2x shows whether Claude Code, Codex, and GLM models are currently in a normal, bonus, or peak usage window based on your local timezone.
+Track GLM, DeepSeek API, and Xiaomi usage rates in real time. has2x shows the current peak or off-peak rate and converts schedules to your local timezone.
 
 ## Features
 
@@ -11,7 +11,7 @@ Track AI service usage multipliers in real time. has2x shows whether Claude Code
 - **Local Timezone Support** — Browser timezone is detected with `Intl.DateTimeFormat()`.
 - **Dark/Light Mode** — Theme preference is saved in `localStorage`.
 - **Service Filter** — Choose which services are visible on the dashboard.
-- **Provider Pages** — Dedicated pages for `/claude`, `/codex`, and `/glm`.
+- **Provider Pages** — Dedicated pages for `/glm`, `/deepseek`, and `/xiaomi`.
 - **Widget Mode** — Minimal embeddable UI via URL parameters.
 - **Client-Side Only** — No API routes or external server calls for status calculations.
 
@@ -19,37 +19,37 @@ Track AI service usage multipliers in real time. has2x shows whether Claude Code
 
 | Service | Peak Hours | Current Logic | Notes |
 |---------|------------|---------------|-------|
-| **Claude Code** | None for Pro/Max | Peak-hour limit reduction removed; normal five-hour limits all day | Claude Code only. Claude chat and API limits may differ. |
-| **Codex** | None | 2× active 24/7 until May 31, 2026 | Applies to Pro subscriptions according to the app copy. |
-| **GLM-5.1 / 5.2** | 2PM-6PM Beijing Time | Peak: 3× usage; off-peak: 1× until Sep 30, 2026, then 2× | GLM-5.2 shares the same usage rules as GLM-5.1, so they are tracked as one card. |
-| **GLM-5-Turbo** | 2PM-6PM Beijing Time | Peak: 3× usage; off-peak: 1× until Sep 30, 2026, then 2× | Local time is calculated in the browser. |
+| **GLM-5.3** | Monday–Friday, 14:00–18:00 SGT (UTC+8) | Peak: 3× quota; off-peak: 1× |
+| **GLM-5.3-Flash** | Monday–Friday, 14:00–18:00 SGT (UTC+8) | Peak: 1.2× quota; off-peak: 0.4× |
+| **DeepSeek API** | Monday–Friday, 09:00–12:00 and 14:00–18:00 SGT (UTC+8) | Peak prices are 2× off-peak prices | Chinese public holidays are off-peak; the tracker does not check holiday dates. See [DeepSeek's official pricing page](https://api-docs.deepseek.com/quick_start/pricing/). |
+| **Xiaomi** | 16:00–24:00 UTC | 0.8× consumption during the bonus window; 1× otherwise | Local time is calculated in the browser. |
 
 ## Pages
 
 | Route | Description |
 |-------|-------------|
 | `/` | Main dashboard with all selected services. |
-| `/claude` | Claude Code provider view. |
-| `/codex` | Codex-only provider view. |
-| `/glm` | GLM provider view with GLM-5.1 / 5.2 and GLM-5-Turbo. |
+| `/glm` | GLM provider view with GLM-5.3 and GLM-5.3-Flash. |
+| `/deepseek` | DeepSeek API peak and off-peak pricing. |
+| `/xiaomi` | Xiaomi token plan. |
 
 ## URL Parameters
 
 | Parameter | Example | Description |
 |-----------|---------|-------------|
 | `widget` | `?widget=true` | Shows the compact embeddable widget UI. |
-| `services` | `?services=codex,glm5Turbo` | Shows only the selected service keys. |
+| `services` | `?services=glm53,deepseek` | Shows only the selected service keys. |
 
 Supported service keys:
 
 ```text
-claude,codex,glm51,glm5Turbo
+glm53,glm53Flash,deepseek,xiaomi
 ```
 
 Example:
 
 ```text
-/?widget=true&services=codex,glm5Turbo
+/?widget=true&services=glm53,deepseek
 ```
 
 ## Embedding
@@ -57,7 +57,7 @@ Example:
 The app can generate an iframe snippet from the **Get Widget** button on the dashboard. A widget URL looks like this:
 
 ```html
-<iframe src="https://has2x.vercel.app/?widget=true&services=codex,glm5Turbo" width="100%" height="400px" frameborder="0"></iframe>
+<iframe src="https://has2x.vercel.app/?widget=true&services=glm53,deepseek" width="100%" height="400px" frameborder="0"></iframe>
 ```
 
 ## Getting Started
@@ -98,7 +98,7 @@ npm run lint     # Run ESLint
 All status calculations run in the browser:
 
 1. Detect the user's local timezone with `Intl.DateTimeFormat()`.
-2. Convert source peak windows into local time where a service still has peak windows.
+2. Convert peak windows from Singapore time to local time.
 3. Calculate each service's current status, multiplier, and next change time.
 4. Use the `isBonus` flag to recommend the best services to use now.
 
@@ -106,7 +106,7 @@ No external API calls are required for the dynamic status display.
 
 ## Disclaimer
 
-Service limits, promotions, and peak windows can change. Always verify important usage details with the official service provider.
+The above figures are estimates. Actual available usage may vary depending on project complexity, repository size, and whether auto-accept is enabled. Service rates and peak windows can change, so verify important details with the official provider.
 
 ## License
 

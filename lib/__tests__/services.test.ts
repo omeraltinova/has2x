@@ -1,173 +1,95 @@
 import { describe, it, expect } from "vitest";
 import {
-  getClaudeStatus,
-  getGPTStatus,
   getGLMStatus,
+  getDeepSeekStatus,
   getXiaomiStatus,
   formatCountdown,
   getPeakRangesLocal,
+  getWeekdayPeakRangesLocal,
+  GLM_PEAK_WINDOWS,
+  DEEPSEEK_PEAK_WINDOWS,
   getCurrentLocalHour,
   getBestTimeRecommendation,
   PROVIDERS,
+  type ServiceStatus,
 } from "@/lib/services";
 
-const MOCK_CLAUDE: ReturnType<typeof getClaudeStatus> = {
-  name: "Claude Code",
-  multiplier: "1×",
-  isBonus: true,
-  statusLabel: "No Peak Reduction",
-  statusColor: "green",
-  nextChangeAt: null,
-  nextChangeLabel: "",
-  promotionEnd: new Date("2099-12-31"),
-  promotionExpired: false,
-  peakHoursLocal: "None — removed for Claude Code Pro/Max",
-  description: "Claude Code no longer has reduced five-hour limits during peak hours for Pro and Max accounts.",
-  details: "Claude Code only. Anthropic removed peak-hour limit reductions for Pro and Max accounts on May 6, 2026; Claude chat and API limits may differ.",
-};
-
-const MOCK_GPT_BONUS: ReturnType<typeof getGPTStatus> = {
-  name: "Codex",
-  multiplier: "2×",
-  isBonus: true,
-  statusLabel: "2× Limit Active!",
-  statusColor: "green",
-  nextChangeAt: new Date("2026-05-31T23:59:59Z"),
-  nextChangeLabel: "Promotion ends in",
-  promotionEnd: new Date("2026-05-31T23:59:59Z"),
-  promotionExpired: false,
-  peakHoursLocal: "None — 24/7 active until May 31",
-  description: "2× usage around the clock for Pro subs. Valid until May 31, 2026.",
-  details: "OpenAI's ChatGPT/Codex. Currently offering 2× message allowance 24/7 for Pro subscriptions only. No peak hours during this promotion.",
-};
-
-const MOCK_GPT_EXPIRED: ReturnType<typeof getGPTStatus> = {
-  name: "Codex",
-  multiplier: "1×",
-  isBonus: false,
-  statusLabel: "Promotion Ended",
-  statusColor: "gray",
-  nextChangeAt: null,
-  nextChangeLabel: "",
-  promotionEnd: new Date("2026-05-31T23:59:59Z"),
-  promotionExpired: true,
-  peakHoursLocal: "",
-  description: "2x Pro promotion ended on May 31.",
-  details: "OpenAI's ChatGPT/Codex. The 2× Pro promotion has ended. Normal usage rates now apply.",
-};
-
-describe("getClaudeStatus", () => {
-  it("always returns green status with no peak reduction", () => {
-    const result = getClaudeStatus(new Date());
-    expect(result.statusColor).toBe("green");
-    expect(result.isBonus).toBe(true);
-    expect(result.multiplier).toBe("1×");
-    expect(result.nextChangeAt).toBeNull();
-    expect(result.promotionExpired).toBe(false);
-  });
-});
-
-describe("getGPTStatus", () => {
-  it("returns 2x active for dates before May 31, 2026", () => {
-    const before = new Date("2026-05-15T12:00:00Z");
-    const result = getGPTStatus(before);
-    expect(result.multiplier).toBe("2×");
-    expect(result.isBonus).toBe(true);
-    expect(result.statusColor).toBe("green");
-    expect(result.statusLabel).toBe("2× Limit Active!");
-    expect(result.promotionExpired).toBe(false);
-  });
-
-  it("returns promotion expired after May 31, 2026", () => {
-    const after = new Date("2026-06-01T00:00:01Z");
-    const result = getGPTStatus(after);
-    expect(result.multiplier).toBe("1×");
-    expect(result.isBonus).toBe(false);
-    expect(result.statusColor).toBe("gray");
-    expect(result.statusLabel).toBe("Promotion Ended");
-    expect(result.promotionExpired).toBe(true);
-    expect(result.nextChangeAt).toBeNull();
-  });
-
-  it("returns promotion expired at exactly May 31 23:59:59 UTC", () => {
-    const atEnd = new Date("2026-05-31T23:59:59Z");
-    const result = getGPTStatus(atEnd);
-    expect(result.promotionExpired).toBe(true);
-  });
-
-  it("returns active right before May 31 23:59:58 UTC", () => {
-    const before = new Date("2026-05-31T23:59:58Z");
-    const result = getGPTStatus(before);
-    expect(result.promotionExpired).toBe(false);
-    expect(result.multiplier).toBe("2×");
-  });
-});
+function makeStatus(name: string, isBonus: boolean, nextChangeAt: Date | null = null): ServiceStatus {
+  return {
+    name,
+    multiplier: "1×",
+    isBonus,
+    statusLabel: "",
+    statusColor: isBonus ? "green" : "red",
+    nextChangeAt,
+    nextChangeLabel: "Peak starts in",
+    peakHoursLocal: "",
+    description: "",
+  };
+}
 
 describe("getGLMStatus", () => {
-  const makeUTC8 = (hour: number, day = 21, month = 4): Date => {
-    // April = month 3 in zero-indexed JS
-    return new Date(Date.UTC(2026, month, day, hour - 8));
-  };
-
-  it("returns peak status at 14:00 UTC+8 (3x for all GLM models)", () => {
-    const peakTime = makeUTC8(14);
-    const { glm51, glm5Turbo } = getGLMStatus(peakTime);
-    expect(glm51.multiplier).toBe("3×");
-    expect(glm5Turbo.multiplier).toBe("3×");
-    expect(glm51.statusColor).toBe("red");
-    expect(glm5Turbo.statusColor).toBe("red");
+  it("applies the flagship and Flash quota rates during weekday peak hours", () => {
+    const peakTime = new Date("2026-04-20T06:00:00Z");
+    const { glm53, glm53Flash } = getGLMStatus(peakTime);
+    expect(glm53.multiplier).toBe("3×");
+    expect(glm53Flash.multiplier).toBe("1.2×");
+    expect(glm53.statusColor).toBe("red");
+    expect(glm53Flash.statusColor).toBe("red");
   });
 
-  it("returns off-peak status at 10:00 UTC+8", () => {
-    const offPeakTime = makeUTC8(10);
-    const { glm51, glm5Turbo } = getGLMStatus(offPeakTime);
-    // GLM-5.1/5.2 and Turbo: 1x off-peak before end of September 2026 (test date April)
-    expect(glm51.multiplier).toBe("1×");
-    expect(glm5Turbo.multiplier).toBe("1×");
-    expect(glm51.statusColor).toBe("green");
-    expect(glm5Turbo.statusColor).toBe("green");
+  it("applies off-peak rates before the weekday peak window", () => {
+    const offPeakTime = new Date("2026-04-20T02:00:00Z");
+    const { glm53, glm53Flash } = getGLMStatus(offPeakTime);
+    expect(glm53.multiplier).toBe("1×");
+    expect(glm53Flash.multiplier).toBe("0.4×");
+    expect(glm53.statusColor).toBe("green");
+    expect(glm53Flash.statusColor).toBe("green");
   });
 
-  it("returns peak status at 17:59 UTC+8", () => {
-    const beforeEnd = makeUTC8(17, 21, 4);
-    const { glm51 } = getGLMStatus(beforeEnd);
-    expect(glm51.multiplier).toBe("3×");
-    expect(glm51.statusColor).toBe("red");
+  it("treats weekends as off-peak", () => {
+    const saturdayPeakHour = new Date("2026-05-02T06:00:00Z");
+    const { glm53, glm53Flash } = getGLMStatus(saturdayPeakHour);
+    expect(glm53.multiplier).toBe("1×");
+    expect(glm53Flash.multiplier).toBe("0.4×");
   });
 
-  it("returns off-peak at exactly 18:00 UTC+8", () => {
-    const atEnd = makeUTC8(18);
-    const { glm51 } = getGLMStatus(atEnd);
-    // 18:00 is the first off-peak hour (test date April, before promo end → 1×)
-    expect(glm51.multiplier).toBe("1×");
-    expect(glm51.statusColor).toBe("green");
+  it("starts off-peak at 18:00 SGT", () => {
+    const atEnd = new Date("2026-04-20T10:00:00Z");
+    const { glm53, glm53Flash } = getGLMStatus(atEnd);
+    expect(glm53.multiplier).toBe("1×");
+    expect(glm53Flash.multiplier).toBe("0.4×");
   });
 
-  it("GLM-5.1/5.2 and Turbo off-peak promo still active in July 2026 (before Sept 30)", () => {
-    const offPeakInJuly = new Date(Date.UTC(2026, 6, 1, 2, 0, 0)); // 10:00 UTC+8 in July
-    const { glm51, glm5Turbo } = getGLMStatus(offPeakInJuly);
-    expect(glm51.multiplier).toBe("1×");
-    expect(glm5Turbo.multiplier).toBe("1×");
-    expect(glm51.promotionExpired).toBe(false);
-    expect(glm5Turbo.promotionExpired).toBe(false);
-    expect(glm51.statusColor).toBe("green");
-    expect(glm5Turbo.statusColor).toBe("green");
+  it("does not attach an end date to either GLM rate", () => {
+    const { glm53, glm53Flash } = getGLMStatus(new Date("2026-04-20T02:00:00Z"));
+    expect(glm53).not.toHaveProperty("promotionEnd");
+    expect(glm53Flash).not.toHaveProperty("promotionEnd");
+  });
+});
+
+describe("getDeepSeekStatus", () => {
+  it("marks both weekday peak windows at twice the off-peak price", () => {
+    const morningPeak = getDeepSeekStatus(new Date("2026-04-20T01:00:00Z"));
+    const afternoonPeak = getDeepSeekStatus(new Date("2026-04-20T06:00:00Z"));
+    expect(morningPeak.multiplier).toBe("2×");
+    expect(afternoonPeak.multiplier).toBe("2×");
+    expect(morningPeak.statusColor).toBe("red");
   });
 
-  it("GLM-5.1/5.2 and Turbo promotions expire after September 30, 2026", () => {
-    const offPeakAfterPromo = new Date(Date.UTC(2026, 9, 1, 2, 0, 0)); // 10:00 UTC+8 in October
-    const { glm51, glm5Turbo } = getGLMStatus(offPeakAfterPromo);
-    expect(glm51.multiplier).toBe("2×");
-    expect(glm5Turbo.multiplier).toBe("2×");
-    expect(glm51.promotionExpired).toBe(true);
-    expect(glm5Turbo.promotionExpired).toBe(true);
-    expect(glm51.statusColor).toBe("orange");
-    expect(glm5Turbo.statusColor).toBe("orange");
+  it("marks other weekday and weekend hours as off-peak", () => {
+    const midday = getDeepSeekStatus(new Date("2026-04-20T04:00:00Z"));
+    const saturday = getDeepSeekStatus(new Date("2026-05-02T01:00:00Z"));
+    expect(midday.multiplier).toBe("1×");
+    expect(saturday.multiplier).toBe("1×");
+    expect(saturday.statusColor).toBe("green");
   });
 
-  it("GLM-5.1 card is shared with GLM-5.2 (same usage rules)", () => {
-    const { glm51 } = getGLMStatus(makeUTC8(10));
-    expect(glm51.name).toBe("GLM-5.1 / 5.2");
+  it("builds peak timelines only for weekdays", () => {
+    const weekday = new Date("2026-04-20T01:00:00Z");
+    const weekend = new Date("2026-05-02T01:00:00Z");
+    expect(getWeekdayPeakRangesLocal(DEEPSEEK_PEAK_WINDOWS, weekday).length).toBeGreaterThanOrEqual(2);
+    expect(getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, weekend)).toEqual([]);
   });
 });
 
@@ -279,62 +201,58 @@ describe("getCurrentLocalHour", () => {
 describe("getBestTimeRecommendation", () => {
   it("marks all optimal when all services are bonus", () => {
     const rec = getBestTimeRecommendation(
-      { ...MOCK_CLAUDE, isBonus: true },
-      { ...MOCK_GPT_BONUS, isBonus: true, nextChangeAt: null },
-      { ...MOCK_CLAUDE, isBonus: true, name: "GLM-5.1 / 5.2", multiplier: "1×" },
-      { ...MOCK_CLAUDE, isBonus: true, name: "GLM-5-Turbo", multiplier: "1×" },
-      { ...MOCK_CLAUDE, isBonus: true, name: "Xiaomi", multiplier: "0.8×" },
+      makeStatus("GLM-5.3", true),
+      makeStatus("GLM-5.3-Flash", true),
+      makeStatus("DeepSeek API", true),
+      makeStatus("Xiaomi", true),
     );
     expect(rec.isAllOptimal).toBe(true);
     expect(rec.summary).toBe("All services are at their best rates now!");
     expect(rec.upcomingBestWindow).toBeNull();
-    expect(rec.nowBestServices).toHaveLength(5);
+    expect(rec.nowBestServices).toHaveLength(4);
   });
 
-  it("identifies services at bonus rate", () => {
+  it("identifies services at the lower rate", () => {
     const rec = getBestTimeRecommendation(
-      { ...MOCK_CLAUDE, isBonus: true },
-      { ...MOCK_GPT_EXPIRED, isBonus: false },
-      { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5.1 / 5.2" },
-      { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5-Turbo" },
-      { ...MOCK_CLAUDE, isBonus: false, name: "Xiaomi" },
+      makeStatus("GLM-5.3", false),
+      makeStatus("GLM-5.3-Flash", false),
+      makeStatus("DeepSeek API", true),
+      makeStatus("Xiaomi", false),
     );
     expect(rec.isAllOptimal).toBe(false);
     expect(rec.nowBestServices).toHaveLength(1);
-    expect(rec.nowBestServices[0].name).toBe("Claude Code");
+    expect(rec.nowBestServices[0].name).toBe("DeepSeek API");
   });
 
-  it("reports no bonus services correctly", () => {
+  it("reports no lower-rate services correctly", () => {
     const rec = getBestTimeRecommendation(
-      { ...MOCK_CLAUDE, isBonus: false },
-      { ...MOCK_GPT_EXPIRED, isBonus: false },
-      { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5.1 / 5.2" },
-      { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5-Turbo" },
-      { ...MOCK_CLAUDE, isBonus: false, name: "Xiaomi" },
+      makeStatus("GLM-5.3", false),
+      makeStatus("GLM-5.3-Flash", false),
+      makeStatus("DeepSeek API", false),
+      makeStatus("Xiaomi", false),
     );
     expect(rec.isAllOptimal).toBe(false);
     expect(rec.nowBestServices).toHaveLength(0);
-    expect(rec.summary).toBe("No services are at bonus rates currently.");
+    expect(rec.summary).toBe("No services are at their lower rate right now.");
   });
 
   it("provides upcoming best window when not all optimal", () => {
     const futureDate = new Date(Date.now() + 3600000); // 1 hour from now
     const rec = getBestTimeRecommendation(
-      { ...MOCK_CLAUDE, isBonus: true },
-      { ...MOCK_GPT_EXPIRED, isBonus: false },
-      { ...MOCK_CLAUDE, isBonus: false, name: "GLM-5.1 / 5.2", nextChangeAt: futureDate },
-      { ...MOCK_CLAUDE, isBonus: true, name: "GLM-5-Turbo" },
-      { ...MOCK_CLAUDE, isBonus: false, name: "Xiaomi", nextChangeAt: new Date(Date.now() + 7200000) },
+      makeStatus("GLM-5.3", false, futureDate),
+      makeStatus("GLM-5.3-Flash", true),
+      makeStatus("DeepSeek API", false, new Date(Date.now() + 7200000)),
+      makeStatus("Xiaomi", true),
     );
     expect(rec.upcomingBestWindow).not.toBeNull();
-    expect(rec.upcomingBestWindow!.services).toContain("GLM-5.1 / 5.2");
+    expect(rec.upcomingBestWindow!.services).toContain("GLM-5.3");
     expect(rec.upcomingBestWindow!.countdown).toBeTruthy();
   });
 });
 
 describe("PROVIDERS", () => {
   it("has all expected provider keys", () => {
-    expect(Object.keys(PROVIDERS)).toEqual(["claude", "codex", "glm", "xiaomi"]);
+    expect(Object.keys(PROVIDERS)).toEqual(["glm", "deepseek", "xiaomi"]);
   });
 
   it("each provider has required fields", () => {
@@ -348,9 +266,8 @@ describe("PROVIDERS", () => {
     }
   });
 
-  it("GLM provider has two services (GLM-5 removed)", () => {
+  it("GLM provider has only the current GLM models", () => {
     const glm = PROVIDERS.glm;
-    expect(glm.services).toEqual(["glm51", "glm5Turbo"]);
-    expect(glm.services).not.toContain("glm5");
+    expect(glm.services).toEqual(["glm53", "glm53Flash"]);
   });
 });

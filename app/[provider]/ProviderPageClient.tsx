@@ -8,13 +8,16 @@ import { ThemeSelector } from "@/app/components/ThemeSelector";
 import { useStatuses } from "@/lib/useStatuses";
 import {
   getPeakRangesLocal,
+  getWeekdayPeakRangesLocal,
+  GLM_PEAK_WINDOWS,
+  DEEPSEEK_PEAK_WINDOWS,
   getCurrentLocalHour,
   PROVIDERS,
   type ProviderKey,
   type ServiceStatus,
 } from "@/lib/services";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
-import { Timeline, AlwaysActiveTimeline } from "@/app/components/Timeline";
+import { Timeline } from "@/app/components/Timeline";
 import { StatusCard } from "@/app/components/StatusCard";
 
 const PROVIDER_COLORS: Record<string, { bg: string; border: string; text: string; hoverBg: string }> = {
@@ -41,6 +44,12 @@ const PROVIDER_COLORS: Record<string, { bg: string; border: string; text: string
     border: "border-yellow-500/30 hover:border-yellow-500/50",
     text: "text-yellow-600 dark:text-yellow-400",
     hoverBg: "hover:bg-yellow-500/10",
+  },
+  blue: {
+    bg: "bg-blue-500/10 dark:bg-blue-500/5",
+    border: "border-blue-500/30 hover:border-blue-500/50",
+    text: "text-blue-600 dark:text-blue-400",
+    hoverBg: "hover:bg-blue-500/10",
   },
 };
 
@@ -73,11 +82,10 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
   const providerServices = provider.services;
   const colors = PROVIDER_COLORS[provider.color] || PROVIDER_COLORS.green;
 
-  const serviceCards: { key: string; status: ServiceStatus; isCodex?: boolean }[] = [];
-  if (providerServices.includes("claude")) serviceCards.push({ key: "claude", status: statuses.claude });
-  if (providerServices.includes("codex")) serviceCards.push({ key: "codex", status: statuses.gpt, isCodex: true });
-  if (providerServices.includes("glm51")) serviceCards.push({ key: "glm51", status: statuses.glm51 });
-  if (providerServices.includes("glm5Turbo")) serviceCards.push({ key: "glm5Turbo", status: statuses.glm5Turbo });
+  const serviceCards: { key: string; status: ServiceStatus }[] = [];
+  if (providerServices.includes("glm53")) serviceCards.push({ key: "glm53", status: statuses.glm53 });
+  if (providerServices.includes("glm53Flash")) serviceCards.push({ key: "glm53Flash", status: statuses.glm53Flash });
+  if (providerServices.includes("deepseek")) serviceCards.push({ key: "deepseek", status: statuses.deepseek });
   if (providerServices.includes("xiaomi")) serviceCards.push({ key: "xiaomi", status: statuses.xiaomi });
 
   return (
@@ -161,24 +169,19 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
               ? "grid-cols-1 md:grid-cols-2 max-w-2xl mx-auto"
               : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto"
         }`}>
-          {providerServices.includes("claude") && (
+          {providerServices.includes("glm53") && (
             <div className="w-full">
-              <AlwaysActiveTimeline currentHour={getCurrentLocalHour(new Date())} label="Claude Code Limit Window" markerLabel="(normal)" footer="No peak-hour reduction for Claude Code Pro/Max" />
+              <Timeline peakRanges={getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5.3 Peak Hours" />
             </div>
           )}
-          {providerServices.includes("codex") && (
+          {providerServices.includes("glm53Flash") && (
             <div className="w-full">
-              <AlwaysActiveTimeline currentHour={getCurrentLocalHour(new Date())} />
+              <Timeline peakRanges={getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5.3-Flash Peak Hours" />
             </div>
           )}
-          {providerServices.includes("glm51") && (
+          {providerServices.includes("deepseek") && (
             <div className="w-full">
-              <Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM Peak Hours" />
-            </div>
-          )}
-          {providerServices.includes("glm5Turbo") && (
-            <div className="w-full">
-              <Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5-Turbo Peak Hours" />
+              <Timeline peakRanges={getWeekdayPeakRangesLocal(DEEPSEEK_PEAK_WINDOWS, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="DeepSeek API Peak Hours" />
             </div>
           )}
           {providerServices.includes("xiaomi") && (
@@ -190,6 +193,8 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
 
         <footer className="mt-12 text-center text-xs text-zinc-500">
           <p>Information may be inaccurate or outdated. For the most accurate data, please visit the official service websites.</p>
+          <p className="mt-1">The above figures are estimates. Actual available usage may vary depending on project complexity, repository size, and whether auto-accept is enabled.</p>
+          {providerKey === "deepseek" && <p className="mt-1">Chinese public holidays are off-peak. This tracker does not check holiday dates. See the <a className="underline" href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noopener noreferrer">official pricing schedule</a>.</p>}
           <div className="mt-4 flex items-center justify-center gap-4 flex-wrap">
             <span className="text-zinc-400">Built by{" "}
               <a

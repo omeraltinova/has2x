@@ -10,6 +10,9 @@ import { useStatuses } from "@/lib/useStatuses";
 import { safeGetItem } from "@/lib/safeGetItem";
 import {
   getPeakRangesLocal,
+  getWeekdayPeakRangesLocal,
+  GLM_PEAK_WINDOWS,
+  DEEPSEEK_PEAK_WINDOWS,
   getCurrentLocalHour,
   getBestTimeRecommendation,
   PROVIDERS,
@@ -17,12 +20,12 @@ import {
 } from "@/lib/services";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import { AnimatedHeader } from "@/app/components/AnimatedHeader";
-import { Timeline, AlwaysActiveTimeline } from "@/app/components/Timeline";
+import { Timeline } from "@/app/components/Timeline";
 import { BestTimeCard } from "@/app/components/BestTimeCard";
 import { StatusCard } from "@/app/components/StatusCard";
 import { WidgetCard } from "@/app/components/WidgetCard";
 
-const ALL_SERVICES = ["claude", "codex", "glm51", "glm5Turbo", "xiaomi"] as const;
+const ALL_SERVICES = ["glm53", "glm53Flash", "deepseek", "xiaomi"] as const;
 type ServiceKey = typeof ALL_SERVICES[number];
 
 function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initialServices: ServiceKey[] }) {
@@ -31,7 +34,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
   const recommendation = useMemo(() => {
     if (!statuses) return null;
     return getBestTimeRecommendation(
-      statuses.claude, statuses.gpt, statuses.glm51, statuses.glm5Turbo, statuses.xiaomi
+      statuses.glm53, statuses.glm53Flash, statuses.deepseek, statuses.xiaomi
     );
   }, [statuses]);
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
@@ -115,11 +118,10 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
   if (isWidget) {
     return (
       <div className={`min-h-screen p-2 ${theme === "dark" ? "dark-grid-bg" : "light-grid-bg"}`}>
-        <div className="flex flex-wrap justify-center gap-2">
-          {visibleServices.includes("claude") && <WidgetCard status={statuses.claude} />}
-          {visibleServices.includes("codex") && <WidgetCard status={statuses.gpt} />}
-          {visibleServices.includes("glm51") && <WidgetCard status={statuses.glm51} />}
-          {visibleServices.includes("glm5Turbo") && <WidgetCard status={statuses.glm5Turbo} />}
+      <div className="flex flex-wrap justify-center gap-2">
+          {visibleServices.includes("glm53") && <WidgetCard status={statuses.glm53} />}
+          {visibleServices.includes("glm53Flash") && <WidgetCard status={statuses.glm53Flash} />}
+          {visibleServices.includes("deepseek") && <WidgetCard status={statuses.deepseek} />}
           {visibleServices.includes("xiaomi") && <WidgetCard status={statuses.xiaomi} />}
         </div>
       </div>
@@ -153,6 +155,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                 orange: { bg: "bg-orange-500/10 dark:bg-orange-500/5", border: "border-orange-500/30 hover:border-orange-500/50", text: "text-orange-600 dark:text-orange-400" },
                 green: { bg: "bg-accent/10 dark:bg-accent/5", border: "border-accent/30 hover:border-accent/50", text: "text-accent-text" },
                 cyan: { bg: "bg-cyan-500/10 dark:bg-cyan-500/5", border: "border-cyan-500/30 hover:border-cyan-500/50", text: "text-cyan-600 dark:text-cyan-400" },
+                blue: { bg: "bg-blue-500/10 dark:bg-blue-500/5", border: "border-blue-500/30 hover:border-blue-500/50", text: "text-blue-600 dark:text-blue-400" },
                 yellow: { bg: "bg-yellow-500/10 dark:bg-yellow-500/5", border: "border-yellow-500/30 hover:border-yellow-500/50", text: "text-yellow-600 dark:text-yellow-400" },
               };
               const c = colorMap[p.color] || colorMap.green;
@@ -175,29 +178,23 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
-          {visibleServices.includes("claude") && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {visibleServices.includes("glm53") && (
             <div className="flex flex-col">
-              <div className="flex flex-1"><StatusCard status={statuses.claude} /></div>
-              <div className="mt-4"><AlwaysActiveTimeline currentHour={getCurrentLocalHour(new Date())} label="Claude Code Limit Window" markerLabel="(normal)" footer="No peak-hour reduction for Claude Code Pro/Max" /></div>
+              <div className="flex flex-1"><StatusCard status={statuses.glm53} /></div>
+              <div className="mt-4"><Timeline peakRanges={getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5.3 Peak Hours" /></div>
             </div>
           )}
-          {visibleServices.includes("codex") && (
+          {visibleServices.includes("glm53Flash") && (
             <div className="flex flex-col">
-              <div className="flex flex-1"><StatusCard status={statuses.gpt} /></div>
-              <div className="mt-4"><AlwaysActiveTimeline currentHour={getCurrentLocalHour(new Date())} /></div>
+              <div className="flex flex-1"><StatusCard status={statuses.glm53Flash} /></div>
+              <div className="mt-4"><Timeline peakRanges={getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5.3-Flash Peak Hours" /></div>
             </div>
           )}
-          {visibleServices.includes("glm51") && (
+          {visibleServices.includes("deepseek") && (
             <div className="flex flex-col">
-              <div className="flex flex-1"><StatusCard status={statuses.glm51} /></div>
-              <div className="mt-4"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5.1 / 5.2 Peak Hours" /></div>
-            </div>
-          )}
-          {visibleServices.includes("glm5Turbo") && (
-            <div className="flex flex-col">
-              <div className="flex flex-1"><StatusCard status={statuses.glm5Turbo} /></div>
-              <div className="mt-4"><Timeline peakRanges={getPeakRangesLocal(14, 18, 8, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="GLM-5-Turbo Peak Hours" /></div>
+              <div className="flex flex-1"><StatusCard status={statuses.deepseek} /></div>
+              <div className="mt-4"><Timeline peakRanges={getWeekdayPeakRangesLocal(DEEPSEEK_PEAK_WINDOWS, new Date())} currentHour={getCurrentLocalHour(new Date())} serviceColor="red" label="DeepSeek API Peak Hours" /></div>
             </div>
           )}
           {visibleServices.includes("xiaomi") && (
@@ -212,12 +209,18 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
           <p>
             Information may be inaccurate or outdated. For the most accurate data, please visit the official service websites.
           </p>
+          <p className="mt-1">
+            The above figures are estimates. Actual available usage may vary depending on project complexity, repository size, and whether auto-accept is enabled.
+          </p>
+          <p className="mt-1">
+            DeepSeek treats Chinese public holidays as off-peak. This tracker does not check holiday dates. See the <a className="underline" href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noopener noreferrer">official pricing schedule</a>.
+          </p>
           <div className="mt-4 flex items-center justify-center gap-4 flex-wrap">
             <div className="relative" ref={filterRef}>
               <button
                 onClick={() => setShowFilterMenu(!showFilterMenu)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors ${
-                  visibleServices.length < 5 || !showBestTime
+                  visibleServices.length < ALL_SERVICES.length || !showBestTime
                     ? 'bg-accent/15 border border-accent/30 text-accent-text'
                     : 'bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
                 }`}
@@ -225,7 +228,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                 </svg>
-                {visibleServices.length < 5 || !showBestTime ? 'Filtered' : 'Filter'}
+                {visibleServices.length < ALL_SERVICES.length || !showBestTime ? 'Filtered' : 'Filter'}
               </button>
               {showFilterMenu && (
                 <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white dark:bg-zinc-800 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-700 p-2 min-w-[180px] z-50">
@@ -239,10 +242,9 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                     <span className="text-sm font-medium text-accent-text">Best Time to Use</span>
                   </label>
                   {[
-                    { key: "claude" as const, label: "Claude Code" },
-                    { key: "codex" as const, label: "Codex" },
-                    { key: "glm51" as const, label: "GLM-5.1 / 5.2" },
-                    { key: "glm5Turbo" as const, label: "GLM-5-Turbo" },
+                    { key: "glm53" as const, label: "GLM-5.3" },
+                    { key: "glm53Flash" as const, label: "GLM-5.3-Flash" },
+                    { key: "deepseek" as const, label: "DeepSeek API" },
                     { key: "xiaomi" as const, label: "Xiaomi" },
                   ].map((service) => (
                     <label
@@ -309,10 +311,9 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                   <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Select Services:</p>
                   <div className="flex flex-wrap gap-2">
                     {[
-                      { key: "claude" as const, label: "Claude Code" },
-                      { key: "codex" as const, label: "Codex" },
-                      { key: "glm51" as const, label: "GLM-5.1 / 5.2" },
-                      { key: "glm5Turbo" as const, label: "GLM-5-Turbo" },
+                      { key: "glm53" as const, label: "GLM-5.3" },
+                      { key: "glm53Flash" as const, label: "GLM-5.3-Flash" },
+                      { key: "deepseek" as const, label: "DeepSeek API" },
                       { key: "xiaomi" as const, label: "Xiaomi" },
                     ].map((service) => (
                       <label
@@ -372,7 +373,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
                 <div className="flex gap-2 flex-wrap">
                   <span className="text-xs text-zinc-500">Parameters:</span>
                   <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-600 dark:text-zinc-400">?widget=true</code>
-                  <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-600 dark:text-zinc-400">?services=codex,glm5Turbo</code>
+                  <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-600 dark:text-zinc-400">?services=glm53,deepseek</code>
                 </div>
               </div>
 
