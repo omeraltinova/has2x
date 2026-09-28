@@ -6,8 +6,8 @@ import { useHasHydrated } from "@/lib/useHasHydrated";
 import { safeGetItem } from "@/lib/safeGetItem";
 import {
   getPeakRangesLocal,
+  getGLMPeakRangesLocal,
   getWeekdayPeakRangesLocal,
-  GLM_PEAK_WINDOWS,
   DEEPSEEK_PEAK_WINDOWS,
   getCurrentLocalHour,
   getBestTimeRecommendation,
@@ -116,18 +116,18 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
     {
       key: "glm53",
       status: statuses.glm53,
-      peakRanges: getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, scheduleNow),
+      peakRanges: getGLMPeakRangesLocal(scheduleNow),
       currentHour,
       serviceColor: "red",
-      label: "GLM-5.3 Peak Hours",
+      label: "GLM-5.3 Rate Schedule",
     },
     {
       key: "glm53Flash",
       status: statuses.glm53Flash,
-      peakRanges: getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, scheduleNow),
+      peakRanges: getGLMPeakRangesLocal(scheduleNow),
       currentHour,
       serviceColor: "red",
-      label: "GLM-5.3-Flash Peak Hours",
+      label: "GLM-5.3-Flash Rate Schedule",
     },
     {
       key: "deepseek",

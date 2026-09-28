@@ -53,6 +53,13 @@ export const DEEPSEEK_PEAK_WINDOWS: PeakRange[] = [
 
 const SINGAPORE_OFFSET_HOURS = 8;
 const SINGAPORE_OFFSET_MS = SINGAPORE_OFFSET_HOURS * 60 * 60 * 1000;
+// September 25, 00:00 through October 7, 23:59:59 Singapore time.
+const GLM_PROMOTION_START = Date.UTC(2026, 8, 24, 16);
+const GLM_PROMOTION_END = Date.UTC(2026, 9, 7, 16);
+
+export function isGLMPromotionActive(now: Date): boolean {
+  return now.getTime() >= GLM_PROMOTION_START && now.getTime() < GLM_PROMOTION_END;
+}
 
 function isSingaporeWeekday(now: Date): boolean {
   const singaporeTime = new Date(now.getTime() + SINGAPORE_OFFSET_MS);
@@ -144,10 +151,23 @@ export function getGLMStatus(now: Date): {
   glm53Flash: ServiceStatus;
 } {
   const { isPeak, nextChangeAt } = getPeakWindowState(now, GLM_PEAK_WINDOWS);
-  const peakHoursLocal = "Mon–Fri, 14:00–18:00 SGT (UTC+8)";
-  const common = { isPeak, peakHoursLocal, nextChangeAt, rateUnit: "quota use" };
+  const isPromotion = isGLMPromotionActive(now);
+  const peakHoursLocal = isPromotion
+    ? "All hours at off-peak rates through Oct 7, 2026 (SGT)"
+    : "Mon–Fri, 14:00–18:00 SGT (UTC+8)";
+  const nextRegularChangeAt = !isPromotion &&
+    nextChangeAt.getTime() >= GLM_PROMOTION_START &&
+    nextChangeAt.getTime() < GLM_PROMOTION_END
+    ? getPeakWindowState(new Date(GLM_PROMOTION_END), GLM_PEAK_WINDOWS).nextChangeAt
+    : nextChangeAt;
+  const common = {
+    isPeak: isPeak && !isPromotion,
+    peakHoursLocal,
+    nextChangeAt: isPromotion ? new Date(GLM_PROMOTION_END) : nextRegularChangeAt,
+    rateUnit: "quota use",
+  };
 
-  return {
+  const statuses = {
     glm53: createScheduledStatus({
       ...common,
       name: "GLM-5.3",
@@ -167,6 +187,17 @@ export function getGLMStatus(now: Date): {
       details: "GLM-5.3-Flash API calls use 0.4× quota off-peak and 1.2× during peak hours.",
     }),
   };
+
+  if (isPromotion) {
+    for (const status of Object.values(statuses)) {
+      status.statusLabel = `Promotion — ${status.multiplier} quota use`;
+      status.nextChangeLabel = "Promotion ends in";
+      status.description = "Peak hours are billed at the off-peak rate through Oct 7, 2026 (SGT).";
+      status.details = `${status.details} The promotion applies the off-peak rate all day through Oct 7; normal peak rates return Oct 8 (SGT).`;
+    }
+  }
+
+  return statuses;
 }
 
 export function getDeepSeekStatus(now: Date): ServiceStatus {
@@ -288,6 +319,35 @@ export function getWeekdayPeakRangesLocal(windows: PeakRange[], now: Date): Peak
   return windows.flatMap(({ startHour, endHour }) =>
     getPeakRangesLocal(startHour, endHour, SINGAPORE_OFFSET_HOURS, now)
   );
+}
+
+export function getGLMPeakRangesLocal(now: Date): PeakRange[] {
+  const localDayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const localDayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const singaporeDay = new Date(localDayStart.getTime() + SINGAPORE_OFFSET_MS);
+  const ranges: PeakRange[] = [];
+
+  for (let dayOffset = -1; dayOffset <= 2; dayOffset++) {
+    const day = new Date(Date.UTC(
+      singaporeDay.getUTCFullYear(), singaporeDay.getUTCMonth(), singaporeDay.getUTCDate() + dayOffset
+    ));
+    if (day.getUTCDay() === 0 || day.getUTCDay() === 6) continue;
+
+    const peakStart = day.getTime() + GLM_PEAK_WINDOWS[0].startHour * 60 * 60 * 1000 - SINGAPORE_OFFSET_MS;
+    const peakEnd = day.getTime() + GLM_PEAK_WINDOWS[0].endHour * 60 * 60 * 1000 - SINGAPORE_OFFSET_MS;
+    if (peakStart >= GLM_PROMOTION_START && peakStart < GLM_PROMOTION_END) continue;
+    const start = Math.max(peakStart, localDayStart.getTime());
+    const end = Math.min(peakEnd, localDayEnd.getTime());
+
+    if (start < end) {
+      ranges.push({
+        startHour: (start - localDayStart.getTime()) / (60 * 60 * 1000),
+        endHour: (end - localDayStart.getTime()) / (60 * 60 * 1000),
+      });
+    }
+  }
+
+  return ranges;
 }
 
 export function getCurrentLocalHour(now: Date): number {

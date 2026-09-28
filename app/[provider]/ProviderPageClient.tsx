@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useHasHydrated } from "@/lib/useHasHydrated";
 import {
   getPeakRangesLocal,
+  getGLMPeakRangesLocal,
   getWeekdayPeakRangesLocal,
-  GLM_PEAK_WINDOWS,
   DEEPSEEK_PEAK_WINDOWS,
   getCurrentLocalHour,
   PROVIDERS,
@@ -42,20 +42,20 @@ function getProviderServiceCards(
     cards.push({
       key: "glm53",
       status: statuses.glm53,
-      peakRanges: getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, scheduleNow),
+      peakRanges: getGLMPeakRangesLocal(scheduleNow),
       currentHour,
       serviceColor: "red",
-      label: "GLM-5.3 Peak Hours",
+      label: "GLM-5.3 Rate Schedule",
     });
   }
   if (services.includes("glm53Flash")) {
     cards.push({
       key: "glm53Flash",
       status: statuses.glm53Flash,
-      peakRanges: getWeekdayPeakRangesLocal(GLM_PEAK_WINDOWS, scheduleNow),
+      peakRanges: getGLMPeakRangesLocal(scheduleNow),
       currentHour,
       serviceColor: "red",
-      label: "GLM-5.3-Flash Peak Hours",
+      label: "GLM-5.3-Flash Rate Schedule",
     });
   }
   if (services.includes("deepseek")) {
