@@ -1,6 +1,6 @@
 import { Clock3 } from "lucide-react";
-import Link from "next/link";
 import type { ProviderKey } from "@/lib/services";
+import { SiteBrand } from "@/app/components/SiteBrand";
 import { ThemeSelector } from "@/app/components/ThemeSelector";
 import { ProviderNavigation } from "@/app/components/ProviderNavigation";
 
@@ -16,9 +16,7 @@ export function SiteHeader({ activeProvider, title, description, timezone }: Sit
     <header className="site-header">
       <div className="site-topbar">
         <div className="site-brand-lockup">
-          <Link href="/" className="site-brand" aria-label="has2x overview">
-            has<span className="site-brand-accent">2x</span>
-          </Link>
+          <SiteBrand />
           <span className="site-brand-context">AI service usage</span>
         </div>
 

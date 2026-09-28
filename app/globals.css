@@ -499,6 +499,39 @@ body {
   color: var(--accent-text);
 }
 
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .site-brand {
+    background-image: linear-gradient(
+      105deg,
+      var(--foreground) 0%,
+      var(--foreground) 36%,
+      var(--accent-text) 55%,
+      color-mix(in srgb, var(--accent-text) 50%, var(--foreground)) 67%,
+      var(--accent-text) 82%
+    );
+    background-size: 200% 100%;
+    background-position: 50% 50%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .site-brand-accent {
+    color: inherit;
+  }
+
+  .site-brand:focus-visible {
+    background-position: 100% 50%;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .site-brand:hover {
+      background-position: 100% 50%;
+    }
+  }
+}
+
 .site-brand-context {
   padding-left: 14px;
   border-left: 1px solid var(--card-border);
@@ -868,12 +901,15 @@ body {
   transition: background-color 220ms ease, border-color 220ms ease, color 220ms ease;
 }
 
-.site-brand,
 .site-brand-context,
 .site-intro h1,
 .site-intro p,
 .status-state-card :is(h2, p, span, button) {
   transition: color 220ms ease, background-color 220ms ease, border-color 220ms ease;
+}
+
+.site-brand {
+  transition: color 220ms ease, background-position 700ms var(--motion-ease);
 }
 
 .widget-modal-overlay {
