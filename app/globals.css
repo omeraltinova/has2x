@@ -989,15 +989,13 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .service-grid--overview:not(.service-grid--single) {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
   .provider-services-section .service-grid--single {
     max-width: calc((100% - 24px) / 2);
     margin-inline: 0;
-  }
-}
-
-@media (min-width: 1280px) {
-  .service-grid--four:not(.service-grid--single) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
