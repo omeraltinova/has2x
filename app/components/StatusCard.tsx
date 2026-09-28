@@ -62,7 +62,7 @@ export function StatusCard({ status }: { status: ServiceStatus }) {
 
   return (
     <div
-      className={`status-state-card ${statusTone} relative flex flex-col rounded-2xl border-2 ${bgColor} p-6 shadow-lg ${glowColor} transition-all duration-300 hover:scale-[1.02] h-full w-full`}
+      className={`status-state-card ${statusTone} relative flex flex-col rounded-2xl border-2 ${bgColor} p-6 shadow-lg ${glowColor} h-full w-full`}
     >
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">

@@ -27,6 +27,7 @@
 }
 
 :root {
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --status-positive-fill: var(--accent);
   --status-positive-text: var(--accent-text);
   --status-positive-bg: color-mix(in srgb, var(--accent) 5%, transparent);
@@ -138,6 +139,16 @@
 .status-state-card.status-tone-positive {
   border-color: var(--status-positive-border);
   background-color: var(--status-positive-bg);
+}
+
+.status-state-card {
+  transition: transform 260ms var(--motion-ease), box-shadow 260ms var(--motion-ease), border-color 260ms ease, background-color 260ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .status-state-card:hover {
+    transform: translateY(-2px);
+  }
 }
 
 .status-state-card.status-tone-negative {
@@ -553,7 +564,6 @@ body {
 .site-nav-link[aria-current="page"] {
   background: color-mix(in srgb, var(--accent) 13%, var(--card-bg));
   color: var(--accent-text);
-  font-weight: 650;
 }
 
 .site-nav-link[aria-current="page"]::after {
@@ -565,9 +575,8 @@ body {
   border-radius: 999px;
   background: var(--accent);
   content: "";
-  transform: scaleX(0.2);
-  transform-origin: left;
-  animation: provider-indicator-arrive 400ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  transform-origin: center;
+  animation: nav-indicator-appear 260ms var(--motion-ease) both;
 }
 
 .site-intro {
@@ -579,8 +588,7 @@ body {
 }
 
 .site-intro > div {
-  --provider-intro-offset: 12px;
-  animation: provider-intro-arrive 420ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: page-content-appear 280ms var(--motion-ease) both;
 }
 
 .site-intro h1 {
@@ -606,6 +614,7 @@ body {
 
 .services-section {
   margin-top: 34px;
+  animation: page-content-appear 320ms 40ms var(--motion-ease) both;
 }
 
 .section-heading {
@@ -692,6 +701,7 @@ body {
   border-radius: 12px;
   background: var(--card-bg);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+  animation: surface-enter 200ms var(--motion-ease) both;
 }
 
 .filter-option {
@@ -736,25 +746,20 @@ body {
   flex-direction: column;
 }
 
-.provider-services-section {
-  --provider-content-offset: 22px;
-  animation: provider-content-arrive 460ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-
 .service-unit--revealed {
-  animation: service-panel-arrive 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: service-panel-appear 220ms ease-out both;
 }
 
 .service-grid--overview .service-unit:nth-child(2) {
-  animation-delay: 45ms;
+  animation-delay: 35ms;
 }
 
 .service-grid--overview .service-unit:nth-child(3) {
-  animation-delay: 90ms;
+  animation-delay: 70ms;
 }
 
 .service-grid--overview .service-unit:nth-child(4) {
-  animation-delay: 135ms;
+  animation-delay: 105ms;
 }
 
 .service-timeline {
@@ -879,6 +884,7 @@ body {
   place-items: center;
   padding: 20px;
   background: rgba(8, 12, 10, 0.58);
+  animation: overlay-enter 180ms ease-out both;
 }
 
 .widget-modal {
@@ -891,6 +897,7 @@ body {
   border-radius: 16px;
   background: var(--card-bg);
   box-shadow: 0 24px 72px rgba(0, 0, 0, 0.32);
+  animation: surface-enter 240ms var(--motion-ease) both;
 }
 
 .widget-modal-controls,
@@ -935,10 +942,20 @@ body {
   color: var(--foreground);
 }
 
-@keyframes provider-indicator-arrive {
+@keyframes page-content-appear {
+  from { opacity: 0.25; }
+  to { opacity: 1; }
+}
+
+@keyframes service-panel-appear {
+  from { opacity: 0.75; }
+  to { opacity: 1; }
+}
+
+@keyframes nav-indicator-appear {
   from {
-    opacity: 0.45;
-    transform: scaleX(0.35);
+    opacity: 0.2;
+    transform: scaleX(0.55);
   }
   to {
     opacity: 1;
@@ -946,48 +963,20 @@ body {
   }
 }
 
-@keyframes provider-intro-arrive {
+@keyframes surface-enter {
   from {
     opacity: 0;
-    transform: translate3d(var(--provider-intro-offset), 0, 0);
+    transform: translateY(-5px) scale(0.99);
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    transform: translateY(0) scale(1);
   }
 }
 
-@keyframes provider-content-arrive {
-  from {
-    opacity: 0.65;
-    transform: translate3d(var(--provider-content-offset), 0, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-@keyframes provider-content-reduced {
-  from {
-    opacity: 0.7;
-    transform: none;
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes service-panel-arrive {
-  from {
-    opacity: 0.88;
-    transform: translateY(9px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes overlay-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 :focus-visible {
@@ -999,6 +988,11 @@ body {
   .service-grid:not(.service-grid--single) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .provider-services-section .service-grid--single {
+    max-width: calc((100% - 24px) / 2);
+    margin-inline: 0;
+  }
 }
 
 @media (min-width: 1280px) {
@@ -1008,14 +1002,6 @@ body {
 }
 
 @media (max-width: 700px) {
-  .site-intro > div {
-    --provider-intro-offset: 7px;
-  }
-
-  .provider-services-section {
-    --provider-content-offset: 14px;
-  }
-
   .dashboard-container {
     width: min(calc(100% - 32px), 1240px);
     padding-top: 16px;
@@ -1110,16 +1096,7 @@ body {
     transition-duration: 0.01ms !important;
   }
 
-  .provider-services-section,
-  .site-intro > div {
-    animation-name: provider-content-reduced !important;
-    animation-duration: 180ms !important;
-    animation-delay: 0ms !important;
-    animation-timing-function: ease-out !important;
-  }
-
-  .site-nav-link[aria-current="page"]::after {
-    animation: none !important;
-    transform: scaleX(1);
+  .status-state-card:hover {
+    transform: none;
   }
 }

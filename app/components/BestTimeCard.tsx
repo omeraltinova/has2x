@@ -32,10 +32,7 @@ export function BestTimeCard({ recommendation }: { recommendation: ReturnType<ty
   return (
     <div className="relative rounded-2xl border-2 border-accent/40 bg-gradient-to-br from-accent/10 to-accent/5 p-6 shadow-lg shadow-accent/10 dark:shadow-accent/5">
       <div className="absolute top-3 right-3">
-        <span className="flex h-3 w-3">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-accent"></span>
-        </span>
+        <span className="block h-3 w-3 rounded-full bg-accent" />
       </div>
 
       <div className="flex items-center gap-2 mb-3">
@@ -54,7 +51,7 @@ export function BestTimeCard({ recommendation }: { recommendation: ReturnType<ty
               key={service.name}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/30 text-sm font-medium text-accent-text"
             >
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-accent"></span>
               {service.name} ({service.multiplier})
             </span>
           ))}
