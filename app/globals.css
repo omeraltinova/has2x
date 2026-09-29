@@ -381,8 +381,8 @@ body {
   visibility: hidden;
 }
 
-.status-widget-detail:hover .status-widget-tooltip,
-.status-widget-detail:focus-within .status-widget-tooltip {
+.status-widget-info:hover + .status-widget-tooltip,
+.status-widget-info:focus-visible + .status-widget-tooltip {
   opacity: 1;
   transform: translateY(0);
   visibility: visible;
@@ -436,6 +436,13 @@ body {
   font-size: 0.64rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.status-widget-legacy {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.66rem;
 }
 
 .status-widget-countdown {

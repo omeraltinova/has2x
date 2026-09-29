@@ -38,6 +38,11 @@ export type ServiceStatus = {
   description: string;
   details?: string;
   rateUnit?: string;
+  legacyRate?: {
+    label: string;
+    multiplier: string;
+    unit: string;
+  };
 };
 
 export type PeakRange = {
@@ -164,36 +169,47 @@ export function getGLMStatus(now: Date): {
     isPeak: isPeak && !isPromotion,
     peakHoursLocal,
     nextChangeAt: isPromotion ? new Date(GLM_PROMOTION_END) : nextRegularChangeAt,
-    rateUnit: "quota use",
+    rateUnit: "standard model credits",
   };
 
   const statuses = {
     glm53: createScheduledStatus({
       ...common,
       name: "GLM-5.3",
-      peakMultiplier: "3×",
-      offPeakMultiplier: "1×",
-      peakDescription: "API calls consume quota at a rate of 3 during peak hours.",
-      offPeakDescription: "API calls consume quota at a rate of 1 during off-peak hours.",
-      details: "GLM-5.3 is the flagship model. API calls use 1× quota off-peak and 3× during peak hours.",
+      peakMultiplier: "1×",
+      offPeakMultiplier: "0.5×",
+      peakDescription: "Credit-based plans use the standard model credit rate during peak hours.",
+      offPeakDescription: "Credit-based plans use half the standard model credit rate during off-peak hours.",
+      details: "Credit-based plans calculate model credits from input, cached input, and output tokens. Legacy plans use quota multipliers.",
     }),
     glm53Flash: createScheduledStatus({
       ...common,
       name: "GLM-5.3-Flash",
-      peakMultiplier: "1.2×",
-      offPeakMultiplier: "0.4×",
-      peakDescription: "API calls consume quota at a rate of 1.2 during peak hours.",
-      offPeakDescription: "API calls consume quota at a rate of 0.4 during off-peak hours.",
-      details: "GLM-5.3-Flash API calls use 0.4× quota off-peak and 1.2× during peak hours.",
+      peakMultiplier: "1×",
+      offPeakMultiplier: "0.5×",
+      peakDescription: "Credit-based plans use the standard model credit rate during peak hours.",
+      offPeakDescription: "Credit-based plans use half the standard model credit rate during off-peak hours.",
+      details: "Credit-based plans calculate model credits from input, cached input, and output tokens. Legacy plans use quota multipliers. The separate Flash usage campaign is not tracked here.",
     }),
+  };
+
+  statuses.glm53.legacyRate = {
+    label: "Legacy",
+    multiplier: common.isPeak ? "3×" : "1×",
+    unit: "quota use",
+  };
+  statuses.glm53Flash.legacyRate = {
+    label: "Legacy",
+    multiplier: common.isPeak ? "1.2×" : "0.4×",
+    unit: "quota use",
   };
 
   if (isPromotion) {
     for (const status of Object.values(statuses)) {
-      status.statusLabel = `Promotion — ${status.multiplier} quota use`;
+      status.statusLabel = `Promotion — ${status.multiplier} standard model credits`;
       status.nextChangeLabel = "Promotion ends in";
-      status.description = "Peak hours are billed at the off-peak rate through Oct 7, 2026 (SGT).";
-      status.details = `${status.details} The promotion applies the off-peak rate all day through Oct 7; normal peak rates return Oct 8 (SGT).`;
+      status.description = "All-day off-peak model credit rate through Oct 7, 2026 (SGT).";
+      status.details = `${status.details} All-day off-peak rates apply through Oct 7; regular peak hours return Oct 8 (SGT).`;
     }
   }
 

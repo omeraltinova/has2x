@@ -70,13 +70,15 @@ export function StatusCard({ status }: { status: ServiceStatus }) {
             {status.name}
           </h2>
           {status.details && (
-            <div className="group relative">
+            <div className="relative">
               <button
-                className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-700 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-600"
+                type="button"
+                aria-label={`More information about ${status.name}`}
+                className="peer flex h-5 w-5 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-700 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-600"
               >
                 i
               </button>
-              <div className="absolute left-1/2 top-full z-10 mt-2 w-64 -translate-x-1/2 rounded-lg bg-zinc-800 px-3 py-2 text-xs text-zinc-200 opacity-0 shadow-xl transition-opacity group-hover:opacity-100 dark:bg-zinc-700">
+              <div role="tooltip" className="pointer-events-none invisible absolute left-1/2 top-full z-10 mt-2 w-64 -translate-x-1/2 rounded-lg bg-zinc-800 px-3 py-2 text-xs text-zinc-200 opacity-0 shadow-xl transition-opacity peer-hover:visible peer-hover:opacity-100 peer-focus-visible:visible peer-focus-visible:opacity-100 dark:bg-zinc-700">
                 {status.details}
                 <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-zinc-800 dark:bg-zinc-700"></div>
               </div>
@@ -101,6 +103,14 @@ export function StatusCard({ status }: { status: ServiceStatus }) {
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
         {status.description}
       </p>
+
+      {status.legacyRate && (
+        <div className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800/50">
+          <p className="text-zinc-700 dark:text-zinc-300">
+            {status.legacyRate.label}: <strong>{status.legacyRate.multiplier} {status.legacyRate.unit}</strong>
+          </p>
+        </div>
+      )}
 
       {status.peakHoursLocal && (
         <div className="mb-3 rounded-lg bg-zinc-100 dark:bg-zinc-800/50 px-3 py-2">

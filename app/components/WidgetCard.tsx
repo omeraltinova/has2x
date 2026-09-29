@@ -85,6 +85,12 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
         <span className="status-widget-unit">{getLimitText()}</span>
       </div>
 
+      {status.legacyRate && (
+        <p className="status-widget-legacy">
+          {status.legacyRate.label}: {status.legacyRate.multiplier} {status.legacyRate.unit}
+        </p>
+      )}
+
       {countdown && (
         <div className="status-widget-countdown">
           <span className="status-widget-countdown-label">In</span>

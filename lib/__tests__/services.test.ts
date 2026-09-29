@@ -29,11 +29,14 @@ function makeStatus(name: string, isBonus: boolean, nextChangeAt: Date | null = 
 }
 
 describe("getGLMStatus", () => {
-  it("applies the flagship and Flash quota rates during weekday peak hours", () => {
+  it("separates credit and legacy quota rates during weekday peak hours", () => {
     const peakTime = new Date("2026-04-20T06:00:00Z");
     const { glm53, glm53Flash } = getGLMStatus(peakTime);
-    expect(glm53.multiplier).toBe("3×");
-    expect(glm53Flash.multiplier).toBe("1.2×");
+    expect(glm53.multiplier).toBe("1×");
+    expect(glm53Flash.multiplier).toBe("1×");
+    expect(glm53.legacyRate?.label).toBe("Legacy");
+    expect(glm53.legacyRate?.multiplier).toBe("3×");
+    expect(glm53Flash.legacyRate?.multiplier).toBe("1.2×");
     expect(glm53.statusColor).toBe("red");
     expect(glm53Flash.statusColor).toBe("red");
   });
@@ -41,8 +44,10 @@ describe("getGLMStatus", () => {
   it("applies off-peak rates before the weekday peak window", () => {
     const offPeakTime = new Date("2026-04-20T02:00:00Z");
     const { glm53, glm53Flash } = getGLMStatus(offPeakTime);
-    expect(glm53.multiplier).toBe("1×");
-    expect(glm53Flash.multiplier).toBe("0.4×");
+    expect(glm53.multiplier).toBe("0.5×");
+    expect(glm53Flash.multiplier).toBe("0.5×");
+    expect(glm53.legacyRate?.multiplier).toBe("1×");
+    expect(glm53Flash.legacyRate?.multiplier).toBe("0.4×");
     expect(glm53.statusColor).toBe("green");
     expect(glm53Flash.statusColor).toBe("green");
   });
@@ -50,15 +55,24 @@ describe("getGLMStatus", () => {
   it("treats weekends as off-peak", () => {
     const saturdayPeakHour = new Date("2026-05-02T06:00:00Z");
     const { glm53, glm53Flash } = getGLMStatus(saturdayPeakHour);
-    expect(glm53.multiplier).toBe("1×");
-    expect(glm53Flash.multiplier).toBe("0.4×");
+    expect(glm53.multiplier).toBe("0.5×");
+    expect(glm53Flash.multiplier).toBe("0.5×");
   });
 
   it("starts off-peak at 18:00 SGT", () => {
     const atEnd = new Date("2026-04-20T10:00:00Z");
     const { glm53, glm53Flash } = getGLMStatus(atEnd);
-    expect(glm53.multiplier).toBe("1×");
-    expect(glm53Flash.multiplier).toBe("0.4×");
+    expect(glm53.multiplier).toBe("0.5×");
+    expect(glm53Flash.multiplier).toBe("0.5×");
+  });
+
+  it("uses off-peak rates for both plan types throughout the promotion", () => {
+    const { glm53, glm53Flash } = getGLMStatus(new Date("2026-09-29T06:00:00Z"));
+    expect(glm53.multiplier).toBe("0.5×");
+    expect(glm53Flash.multiplier).toBe("0.5×");
+    expect(glm53.legacyRate?.multiplier).toBe("1×");
+    expect(glm53Flash.legacyRate?.multiplier).toBe("0.4×");
+    expect(glm53.nextChangeAt?.toISOString()).toBe("2026-10-07T16:00:00.000Z");
   });
 
   it("does not attach an end date to either GLM rate", () => {

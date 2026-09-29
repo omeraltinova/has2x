@@ -138,6 +138,12 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
           timezone={timezone}
         />
 
+        {providerKey === "glm" && (
+          <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
+            GLM cards show the current credit-based rate first and the Legacy quota rate below it. The separate Flash usage campaign is not included here. See Z.AI&apos;s <a className="underline" href="https://docs.z.ai/devpack/overview" target="_blank" rel="noopener noreferrer">credit plan</a> and <a className="underline" href="https://docs.z.ai/devpack/notice/usage-revision" target="_blank" rel="noopener noreferrer">legacy plan notice</a>.
+          </p>
+        )}
+
         <ProviderServicesSection
           key={providerKey}
           providerKey={providerKey}

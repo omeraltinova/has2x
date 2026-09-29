@@ -22,7 +22,7 @@ import { useDashboardState } from "@/app/components/DashboardStateProvider";
 const ALL_SERVICES = ["glm53", "glm53Flash", "deepseek", "xiaomi"] as const;
 type ServiceKey = typeof ALL_SERVICES[number];
 
-function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initialServices: ServiceKey[] }) {
+function HomeContent({ isWidget, initialServices, hasServicesParam }: { isWidget: boolean; initialServices: ServiceKey[]; hasServicesParam: boolean }) {
   const { statuses } = useDashboardState();
   const recommendation = useMemo(() => {
     if (!statuses) return null;
@@ -43,12 +43,14 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
 
   useEffect(() => {
     const initialize = () => {
-      const parsedServices = safeGetItem<string[]>("visibleServices", []);
-      const knownServices = safeGetItem<string[]>("knownServices", []);
-      const validServices = parsedServices.filter((s): s is ServiceKey => ALL_SERVICES.includes(s as ServiceKey));
-      if (validServices.length > 0) {
-        const newServices = ALL_SERVICES.filter((s) => !knownServices.includes(s));
-        setVisibleServices([...validServices, ...newServices]);
+      if (!hasServicesParam) {
+        const parsedServices = safeGetItem<string[]>("visibleServices", []);
+        const knownServices = safeGetItem<string[]>("knownServices", []);
+        const validServices = parsedServices.filter((s): s is ServiceKey => ALL_SERVICES.includes(s as ServiceKey));
+        if (validServices.length > 0) {
+          const newServices = ALL_SERVICES.filter((s) => !knownServices.includes(s));
+          setVisibleServices([...validServices, ...newServices]);
+        }
       }
       localStorage.setItem("knownServices", JSON.stringify([...ALL_SERVICES]));
 
@@ -63,7 +65,7 @@ function HomeContent({ isWidget, initialServices }: { isWidget: boolean; initial
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, []);
+  }, [hasServicesParam]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -383,7 +385,7 @@ function HomeWithParams() {
     ? servicesParam.split(",").filter((s): s is ServiceKey => ALL_SERVICES.includes(s as ServiceKey))
     : [...ALL_SERVICES];
 
-  return <HomeContent isWidget={isWidget} initialServices={initialServices} />;
+  return <HomeContent isWidget={isWidget} initialServices={initialServices} hasServicesParam={servicesParam !== null} />;
 }
 
 export default function Home() {
