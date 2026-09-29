@@ -21,7 +21,7 @@ export function WidgetSurface({ statuses, services, layout }: { statuses: AllSta
   }, []);
 
   return (
-    <main ref={surfaceRef} className="widget-page" data-layout={layout} data-count={services.length}>
+    <main ref={surfaceRef} className="widget-page" data-layout={layout}>
       <header className="widget-header">
         <div><h1>Usage rates</h1><p>Based on your local time</p></div>
         <span className="widget-brand" aria-label="has2x">has<span>2x</span></span>

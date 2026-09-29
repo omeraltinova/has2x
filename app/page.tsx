@@ -223,7 +223,7 @@ function HomeContent({ isWidget, initialServices, hasServicesParam, widgetLayout
           </div>
 
           {services.length > 0 ? (
-            <div className={`service-grid service-grid--overview ${services.length === 1 ? "service-grid--single" : ""}`}>
+            <div className="service-grid service-grid--overview">
               {services.map(({ key, ...service }) => (
                 <ServicePanel key={key} {...service} />
               ))}
