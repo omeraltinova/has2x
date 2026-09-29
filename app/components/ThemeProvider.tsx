@@ -43,7 +43,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     <>
       <script
         dangerouslySetInnerHTML={{
-          __html: `!function(){try{var m=localStorage.getItem("theme-mode"),p=localStorage.getItem("theme-palette"),o=localStorage.getItem("theme");if(o&&!m)try{var v=JSON.parse(o);("dark"===v||"light"===v)&&(m=JSON.stringify(v))}catch(e){}var d=m?JSON.parse(m):"dark",a=p?JSON.parse(p):"emerald";document.documentElement.classList.toggle("dark","dark"===d),document.documentElement.setAttribute("data-theme",a)}catch(e){document.documentElement.classList.add("dark"),document.documentElement.setAttribute("data-theme","emerald")}}();`,
+          __html: `!function(){try{var q=new URLSearchParams(location.search),w=q.get("widget")==="true",d="dark",a="emerald";if(w){d=q.get("mode")==="light"?"light":"dark";a=["emerald","sunset","ocean","cyberpunk"].includes(q.get("theme"))?q.get("theme"):"emerald"}else{var m=localStorage.getItem("theme-mode"),p=localStorage.getItem("theme-palette"),o=localStorage.getItem("theme");if(o&&!m)try{var v=JSON.parse(o);("dark"===v||"light"===v)&&(m=JSON.stringify(v))}catch(e){}d=m?JSON.parse(m):"dark";a=p?JSON.parse(p):"emerald"}document.documentElement.classList.toggle("dark",d==="dark"),document.documentElement.setAttribute("data-theme",a)}catch(e){document.documentElement.classList.add("dark"),document.documentElement.setAttribute("data-theme","emerald")}}();`,
         }}
       />
       {children}

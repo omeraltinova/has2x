@@ -1,11 +1,49 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Info, Cpu, Sparkles, Zap, Smartphone } from "lucide-react";
 import type { ServiceStatus } from "@/lib/services";
 
 export function WidgetCard({ status }: { status: ServiceStatus }) {
   const [countdown, setCountdown] = useState("");
+  const infoRef = useRef<HTMLButtonElement>(null);
+  const tooltipRef = useRef<HTMLSpanElement>(null);
+
+  const placeTooltip = useCallback(() => {
+    const button = infoRef.current;
+    const tooltip = tooltipRef.current;
+    if (!button || !tooltip) return;
+
+    tooltip.style.left = "0px";
+    tooltip.style.top = "0px";
+    tooltip.style.transform = "none";
+    const buttonRect = button.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const margin = 12;
+    const viewportWidth = document.documentElement.clientWidth;
+    const viewportHeight = document.documentElement.clientHeight;
+    const left = Math.max(margin, Math.min(buttonRect.left, viewportWidth - tooltipRect.width - margin));
+    const below = buttonRect.bottom + 8;
+    const above = buttonRect.top - tooltipRect.height - 8;
+    const top = below + tooltipRect.height <= viewportHeight - margin
+      ? below
+      : above >= margin ? above : Math.max(margin, viewportHeight - tooltipRect.height - margin);
+
+    tooltip.style.left = `${left - tooltipRect.left}px`;
+    tooltip.style.top = `${top - tooltipRect.top}px`;
+  }, []);
+
+  useEffect(() => {
+    const reposition = () => {
+      if (infoRef.current?.matches(":hover, :focus")) placeTooltip();
+    };
+    window.addEventListener("resize", reposition);
+    window.addEventListener("scroll", reposition, true);
+    return () => {
+      window.removeEventListener("resize", reposition);
+      window.removeEventListener("scroll", reposition, true);
+    };
+  }, [placeTooltip]);
   
   useEffect(() => {
     if (!status.nextChangeAt) return;
@@ -60,14 +98,17 @@ export function WidgetCard({ status }: { status: ServiceStatus }) {
           {status.details && (
             <div className="status-widget-detail">
               <button
+                ref={infoRef}
                 type="button"
                 className="status-widget-info"
                 aria-label={`More information about ${status.name}`}
                 aria-describedby={detailsId}
+                onMouseEnter={placeTooltip}
+                onFocus={placeTooltip}
               >
                 <Info aria-hidden="true" />
               </button>
-              <span id={detailsId} className="status-widget-tooltip" role="tooltip">
+              <span ref={tooltipRef} id={detailsId} className="status-widget-tooltip" role="tooltip">
                 {status.details}
               </span>
             </div>

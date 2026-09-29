@@ -64,16 +64,19 @@ The "Best Time to Use" card considers all four services even when the dashboard 
 |-----------|---------|----------|
 | `widget` | `?widget=true` | Shows the compact widget instead of the dashboard. Only the value `true` enables it. |
 | `services` | `?services=glm53,deepseek` | Selects the service cards shown on initial load. Unknown keys are ignored. |
+| `theme` | `?theme=ocean` | Widget palette: `emerald` (default), `sunset`, `ocean`, or `cyberpunk`. |
+| `mode` | `?mode=light` | Widget color mode: `dark` (default) or `light`. |
+| `layout` | `?layout=rows` | Widget layout: `cards` (default) or compact `rows`. |
 
-Valid service keys are `glm53`, `glm53Flash`, `deepseek`, and `xiaomi`. If `services` is absent or empty, all four services appear. A nonempty value with no valid keys, such as `?services=other`, produces an empty widget or dashboard.
+Valid service keys are `glm53`, `glm53Flash`, `deepseek`, and `xiaomi`. If `services` is absent or empty, all four services appear. A nonempty value with no valid keys, such as `?services=other`, produces an empty dashboard or a widget with a selection message. Unknown appearance values fall back to the widget defaults.
 
-Select **Get widget** on the dashboard to choose services, width, and height, then copy the generated iframe markup. For example:
+Select **Get widget** on the dashboard to choose services, palette, mode, layout, and maximum width. The preview can be checked at narrow, medium, and wide widths. Copy the generated iframe and resize script to let its height follow the content. For a fixed-height embed without the script:
 
 ```html
-<iframe src="https://has2x.vercel.app/?widget=true&services=glm53,deepseek" width="100%" height="400px" frameborder="0"></iframe>
+<iframe src="https://has2x.vercel.app/?widget=true&amp;services=glm53,deepseek&amp;theme=emerald&amp;mode=dark&amp;layout=cards" title="has2x usage rates" style="display:block;width:100%;height:840px;border:0"></iframe>
 ```
 
-Replace the domain with your own deployment when self-hosting. The widget's service selection is separate from the dashboard filter.
+Replace the domain with your own deployment when self-hosting. A fixed-height frame may leave empty space at wide sizes or need more height in narrow containers; the generated resize script handles both. Hosts that block inline scripts can set iframe height manually. The widget's service selection is separate from the dashboard filter, and its rates are calculated in the visitor's browser without additional API requests.
 
 ## Run locally
 
