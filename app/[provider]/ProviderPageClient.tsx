@@ -155,7 +155,7 @@ function ProviderContent({ providerKey }: { providerKey: ProviderKey }) {
             <p>Information may be inaccurate or outdated. For the most accurate data, visit the official service websites.</p>
             <p>The above figures are estimates. Actual available usage may vary depending on project complexity, repository size, and whether auto-accept is enabled.</p>
             {providerKey === "deepseek" && (
-              <p>Chinese public holidays are off-peak. This tracker does not check holiday dates. See the <a href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noopener noreferrer">official pricing schedule</a>.</p>
+              <p>Off-peak API prices are half the peak rates. See the <a href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noopener noreferrer">official pricing schedule</a>.</p>
             )}
           </div>
           <p className="footer-credit">

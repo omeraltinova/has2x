@@ -45,7 +45,7 @@ Model credits equal `(input tokens × input multiplier + cached input tokens × 
 
 The separate [GLM-5.3-Flash usage campaign](https://docs.z.ai/devpack/overview) can increase available usage in specific tools and hours. This tracker does not model that extra allowance.
 
-The [DeepSeek pricing page](https://api-docs.deepseek.com/quick_start/pricing/) confirms the two weekday peak windows and half-price off-peak rates. Chinese public holidays are also off-peak, but the app has no holiday calendar and may show peak on those dates. [Xiaomi's Token Plan documentation](https://mimo.mi.com/docs/en-US/quick-start/faq/token-plan/Usage%26Quota) describes the 0.8× credit rate during 16:00–24:00 UTC.
+The [DeepSeek pricing page](https://api-docs.deepseek.com/quick_start/pricing/) confirms the two weekday peak windows and half-price off-peak rates. [Xiaomi's Token Plan documentation](https://mimo.mi.com/docs/en-US/quick-start/faq/token-plan/Usage%26Quota) describes the 0.8× credit rate during 16:00–24:00 UTC.
 
 ## Pages and filtering
 
@@ -56,7 +56,7 @@ The [DeepSeek pricing page](https://api-docs.deepseek.com/quick_start/pricing/) 
 | `/deepseek` | DeepSeek API status and schedule. |
 | `/xiaomi` | Xiaomi MiMo Token Plan status and schedule. |
 
-The "Best Time to Use" card considers all four services even when the dashboard filter hides some cards. On reload, a `services` URL parameter controls the visible cards. Without that parameter, the dashboard currently opens all four cards, even if you filtered them before reloading.
+The "Best Time to Use" card considers all four services even when the dashboard filter hides some cards. On reload, a nonempty `services` URL parameter controls the visible cards. Without that parameter, the dashboard restores the service filter saved in that browser; a first visit shows all four cards. An empty `services` value also starts with all four cards.
 
 ## Widget and URL parameters
 

@@ -229,7 +229,7 @@ export function getDeepSeekStatus(now: Date): ServiceStatus {
     nextChangeAt,
     peakDescription: "Peak-hour API prices are twice the off-peak rates.",
     offPeakDescription: "Off-peak API prices are half the peak rates.",
-    details: "DeepSeek's official pricing sets off-peak rates at half the peak rates. Chinese public holidays are off-peak all day. This tracker does not check holiday dates.",
+    details: "DeepSeek's official pricing sets off-peak rates at half the peak rates.",
   });
 }
 
